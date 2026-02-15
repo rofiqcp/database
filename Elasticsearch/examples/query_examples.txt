@@ -1,0 +1,460 @@
+# Elasticsearch Query Examples
+
+This file contains common Elasticsearch queries for the learning module.
+All queries can be executed via curl against http://localhost:9200.
+
+## Basic Queries (via REST API)
+
+### Check cluster health
+```bash
+curl http://localhost:9200/_cluster/health?pretty
+```
+
+### List all indices
+```bash
+curl http://localhost:9200/_cat/indices?v
+```
+
+### Get index mappings
+```bash
+curl http://localhost:9200/items/_mapping?pretty
+```
+
+## Document Operations
+
+### Index (create) a document
+```bash
+curl -X POST http://localhost:9200/items/_doc \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Laptop",
+    "description": "High-performance gaming laptop",
+    "category": "Electronics",
+    "price": 1299.99,
+    "quantity": 5,
+    "created_at": "2024-01-01T10:00:00.000Z",
+    "updated_at": "2024-01-01T10:00:00.000Z"
+  }'
+```
+
+### Get a document by ID
+```bash
+curl http://localhost:9200/items/_doc/<document_id>?pretty
+```
+
+### Update a document
+```bash
+curl -X POST http://localhost:9200/items/_update/<document_id> \
+  -H "Content-Type: application/json" \
+  -d '{
+    "doc": {
+      "price": 1199.99,
+      "updated_at": "2024-01-15T10:00:00.000Z"
+    }
+  }'
+```
+
+### Delete a document
+```bash
+curl -X DELETE http://localhost:9200/items/_doc/<document_id>
+```
+
+## Search Queries
+
+### Match all documents
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": { "match_all": {} }
+  }'
+```
+
+### Match query (full-text search on single field)
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "match": {
+        "name": "gaming laptop"
+      }
+    }
+  }'
+```
+
+### Multi-match query (search across multiple fields)
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "multi_match": {
+        "query": "gaming laptop",
+        "fields": ["name", "description"],
+        "fuzziness": "AUTO"
+      }
+    }
+  }'
+```
+
+### Term query (exact match on keyword field)
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "term": {
+        "category": "Electronics"
+      }
+    }
+  }'
+```
+
+### Range query (price between values)
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "range": {
+        "price": {
+          "gte": 20,
+          "lte": 100
+        }
+      }
+    }
+  }'
+```
+
+### Bool query (combine multiple conditions)
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "bool": {
+        "must": [
+          { "match": { "name": "laptop" } }
+        ],
+        "filter": [
+          { "term": { "category": "Electronics" } },
+          { "range": { "price": { "gte": 500, "lte": 2000 } } }
+        ]
+      }
+    }
+  }'
+```
+
+### Fuzzy query (typo tolerance)
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "fuzzy": {
+        "name": {
+          "value": "laptp",
+          "fuzziness": "AUTO"
+        }
+      }
+    }
+  }'
+```
+
+### Wildcard query
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "wildcard": {
+        "name.keyword": "*Mouse*"
+      }
+    }
+  }'
+```
+
+### Prefix query
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": {
+      "prefix": {
+        "name.keyword": "Wireless"
+      }
+    }
+  }'
+```
+
+## Sorting
+
+### Sort by price descending
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": { "match_all": {} },
+    "sort": [
+      { "price": { "order": "desc" } }
+    ]
+  }'
+```
+
+### Sort by multiple fields
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": { "match_all": {} },
+    "sort": [
+      { "category": { "order": "asc" } },
+      { "price": { "order": "desc" } }
+    ]
+  }'
+```
+
+## Pagination
+
+### Get first 10 results
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": { "match_all": {} },
+    "from": 0,
+    "size": 10
+  }'
+```
+
+### Get next page (items 11-20)
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": { "match_all": {} },
+    "from": 10,
+    "size": 10
+  }'
+```
+
+## Aggregations
+
+### Count items by category
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "size": 0,
+    "aggs": {
+      "categories": {
+        "terms": {
+          "field": "category"
+        }
+      }
+    }
+  }'
+```
+
+### Price statistics
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "size": 0,
+    "aggs": {
+      "price_stats": {
+        "stats": {
+          "field": "price"
+        }
+      }
+    }
+  }'
+```
+
+### Average price by category
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "size": 0,
+    "aggs": {
+      "categories": {
+        "terms": { "field": "category" },
+        "aggs": {
+          "avg_price": {
+            "avg": { "field": "price" }
+          }
+        }
+      }
+    }
+  }'
+```
+
+### Price range histogram
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "size": 0,
+    "aggs": {
+      "price_ranges": {
+        "histogram": {
+          "field": "price",
+          "interval": 100
+        }
+      }
+    }
+  }'
+```
+
+### Total inventory value
+```bash
+curl -X POST http://localhost:9200/items/_search?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "size": 0,
+    "aggs": {
+      "total_value": {
+        "sum": {
+          "script": {
+            "source": "doc['"'"'price'"'"'].value * doc['"'"'quantity'"'"'].value"
+          }
+        }
+      }
+    }
+  }'
+```
+
+## Analyzer Operations
+
+### Test the standard analyzer
+```bash
+curl -X POST http://localhost:9200/items/_analyze?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "analyzer": "standard",
+    "text": "High-Performance Gaming Laptop 2024!"
+  }'
+```
+
+### Test keyword analyzer (no tokenization)
+```bash
+curl -X POST http://localhost:9200/items/_analyze?pretty \
+  -H "Content-Type: application/json" \
+  -d '{
+    "analyzer": "keyword",
+    "text": "Electronics"
+  }'
+```
+
+## Bulk Operations
+
+### Bulk index multiple documents
+```bash
+curl -X POST http://localhost:9200/_bulk \
+  -H "Content-Type: application/x-ndjson" \
+  -d '
+{"index": {"_index": "items"}}
+{"name": "Item 1", "category": "Test", "price": 10.00, "quantity": 5, "created_at": "2024-01-01T00:00:00Z", "updated_at": "2024-01-01T00:00:00Z"}
+{"index": {"_index": "items"}}
+{"name": "Item 2", "category": "Test", "price": 20.00, "quantity": 10, "created_at": "2024-01-01T00:00:00Z", "updated_at": "2024-01-01T00:00:00Z"}
+{"index": {"_index": "items"}}
+{"name": "Item 3", "category": "Test", "price": 30.00, "quantity": 15, "created_at": "2024-01-01T00:00:00Z", "updated_at": "2024-01-01T00:00:00Z"}
+'
+```
+
+## Index Management
+
+### Refresh index (make recent changes searchable)
+```bash
+curl -X POST http://localhost:9200/items/_refresh
+```
+
+### Get index stats
+```bash
+curl http://localhost:9200/items/_stats?pretty
+```
+
+### Get document count
+```bash
+curl http://localhost:9200/items/_count?pretty
+```
+
+### Delete all documents (keep index)
+```bash
+curl -X POST http://localhost:9200/items/_delete_by_query \
+  -H "Content-Type: application/json" \
+  -d '{"query": {"match_all": {}}}'
+```
+
+### Delete index entirely
+```bash
+curl -X DELETE http://localhost:9200/items
+```
+
+## Via Application API
+
+### Get all items
+```bash
+curl http://localhost:3000/api/data
+```
+
+### Get single item
+```bash
+curl http://localhost:3000/api/data/<document_id>
+```
+
+### Create item
+```bash
+curl -X POST http://localhost:3000/api/data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "New Item",
+    "description": "A new item",
+    "category": "Test",
+    "price": 99.99,
+    "quantity": 10
+  }'
+```
+
+### Update item
+```bash
+curl -X PUT http://localhost:3000/api/data/<document_id> \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Item",
+    "description": "Updated description",
+    "category": "Test",
+    "price": 89.99,
+    "quantity": 5
+  }'
+```
+
+### Delete item
+```bash
+curl -X DELETE http://localhost:3000/api/data/<document_id>
+```
+
+### Search items
+```bash
+curl -X POST http://localhost:3000/api/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "laptop",
+    "category": "Electronics",
+    "minPrice": 100,
+    "maxPrice": 2000
+  }'
+```
+
+## Notes
+
+- Elasticsearch IDs are auto-generated strings (e.g., "abc123def456")
+- Text fields are analyzed (tokenized, lowercased) for full-text search
+- Keyword fields are NOT analyzed - use for exact matches and aggregations
+- Use "must" for scored queries and "filter" for non-scored filtering
+- Aggregations run on keyword and numeric fields, not text fields
+- Refresh happens automatically every 1 second by default
+- Use bulk API for inserting many documents at once for better performance
