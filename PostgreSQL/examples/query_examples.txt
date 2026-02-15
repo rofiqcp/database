@@ -1,0 +1,447 @@
+# PostgreSQL Query Examples
+
+## Basic Queries
+
+### Select all items
+SELECT * FROM items;
+
+### Select specific columns
+SELECT id, name, price FROM items;
+
+### Select with condition
+SELECT * FROM items WHERE category = 'Electronics';
+
+### Select with multiple conditions
+SELECT * FROM items WHERE category = 'Electronics' AND price > 1000;
+
+### Select with OR condition
+SELECT * FROM items WHERE category = 'Electronics' OR category = 'Books';
+
+### Select with BETWEEN
+SELECT * FROM items WHERE price BETWEEN 100 AND 500;
+
+### Select with IN
+SELECT * FROM items WHERE category IN ('Electronics', 'Books', 'Clothing');
+
+### Select with NULL check
+SELECT * FROM items WHERE description IS NOT NULL;
+
+### Select with NOT NULL
+SELECT * FROM items WHERE description IS NULL;
+
+## Pattern Matching
+
+### Case-insensitive LIKE (ILIKE)
+SELECT * FROM items WHERE name ILIKE '%laptop%';
+
+### Case-sensitive LIKE
+SELECT * FROM items WHERE name LIKE '%Laptop%';
+
+### Starts with
+SELECT * FROM items WHERE name ILIKE 'gaming%';
+
+### Ends with
+SELECT * FROM items WHERE name ILIKE '%pro';
+
+## Sorting
+
+### Sort ascending
+SELECT * FROM items ORDER BY price ASC;
+
+### Sort descending
+SELECT * FROM items ORDER BY price DESC;
+
+### Multiple sort columns
+SELECT * FROM items ORDER BY category, price DESC;
+
+### Sort by date
+SELECT * FROM items ORDER BY created_at DESC;
+
+## Limiting Results
+
+### Limit rows
+SELECT * FROM items LIMIT 10;
+
+### Skip and limit (pagination)
+SELECT * FROM items LIMIT 10 OFFSET 20;
+
+### Top 5 most expensive
+SELECT * FROM items ORDER BY price DESC LIMIT 5;
+
+## Aggregate Functions
+
+### Count all items
+SELECT COUNT(*) FROM items;
+
+### Count by category
+SELECT category, COUNT(*) as count FROM items GROUP BY category;
+
+### Sum of quantities
+SELECT SUM(quantity) as total_quantity FROM items;
+
+### Average price
+SELECT AVG(price) as average_price FROM items;
+
+### Min and Max
+SELECT MIN(price) as cheapest, MAX(price) as most_expensive FROM items;
+
+### Group by with multiple aggregates
+SELECT 
+  category,
+  COUNT(*) as item_count,
+  AVG(price) as avg_price,
+  SUM(quantity) as total_quantity
+FROM items
+GROUP BY category;
+
+### Having clause
+SELECT category, AVG(price) as avg_price 
+FROM items 
+GROUP BY category 
+HAVING AVG(price) > 500;
+
+## Insert Queries
+
+### Insert single row (PostgreSQL RETURNING)
+INSERT INTO items (name, description, category, price, quantity)
+VALUES ('Laptop', 'Gaming laptop', 'Electronics', 1299.99, 5)
+RETURNING *;
+
+### Insert multiple rows
+INSERT INTO items (name, category, price, quantity)
+VALUES 
+  ('Keyboard', 'Electronics', 79.99, 15),
+  ('Mouse', 'Electronics', 49.99, 20),
+  ('Monitor', 'Electronics', 299.99, 8)
+RETURNING *;
+
+### Insert with default values
+INSERT INTO items (name, price)
+VALUES ('Headphones', 149.99)
+RETURNING *;
+
+## Update Queries
+
+### Update single record
+UPDATE items 
+SET price = 1399.99, updated_at = CURRENT_TIMESTAMP
+WHERE id = 1
+RETURNING *;
+
+### Update multiple records
+UPDATE items 
+SET price = price * 1.1
+WHERE category = 'Electronics'
+RETURNING *;
+
+### Update with calculation
+UPDATE items 
+SET quantity = quantity + 10
+WHERE quantity < 5;
+
+### Conditional update
+UPDATE items 
+SET price = CASE
+  WHEN quantity > 50 THEN price * 0.9
+  WHEN quantity > 20 THEN price * 0.95
+  ELSE price
+END;
+
+## Delete Queries
+
+### Delete by ID
+DELETE FROM items WHERE id = 1 RETURNING *;
+
+### Delete by condition
+DELETE FROM items WHERE price < 10;
+
+### Delete all (use with caution!)
+DELETE FROM items;
+
+### Delete with subquery
+DELETE FROM items 
+WHERE category IN (
+  SELECT category FROM items 
+  GROUP BY category 
+  HAVING COUNT(*) < 2
+);
+
+## Joins (for when you expand the schema)
+
+### Inner join
+SELECT items.*, orders.order_date
+FROM items
+INNER JOIN orders ON items.id = orders.item_id;
+
+### Left join
+SELECT items.*, orders.order_date
+FROM items
+LEFT JOIN orders ON items.id = orders.item_id;
+
+### Self join
+SELECT a.name, b.name as similar_item
+FROM items a
+INNER JOIN items b ON a.category = b.category AND a.id != b.id;
+
+## Subqueries
+
+### Subquery in WHERE
+SELECT * FROM items 
+WHERE price > (SELECT AVG(price) FROM items);
+
+### Subquery in SELECT
+SELECT 
+  name,
+  price,
+  (SELECT AVG(price) FROM items) as avg_price,
+  price - (SELECT AVG(price) FROM items) as price_diff
+FROM items;
+
+### Subquery in FROM
+SELECT category, avg_price 
+FROM (
+  SELECT category, AVG(price) as avg_price 
+  FROM items 
+  GROUP BY category
+) as category_averages
+WHERE avg_price > 100;
+
+## Advanced PostgreSQL Features
+
+### Common Table Expressions (CTE)
+WITH expensive_items AS (
+  SELECT * FROM items WHERE price > 1000
+)
+SELECT category, COUNT(*) as count
+FROM expensive_items
+GROUP BY category;
+
+### Recursive CTE (example structure)
+WITH RECURSIVE item_tree AS (
+  SELECT id, name, 0 as level FROM items WHERE parent_id IS NULL
+  UNION ALL
+  SELECT i.id, i.name, it.level + 1
+  FROM items i
+  INNER JOIN item_tree it ON i.parent_id = it.id
+)
+SELECT * FROM item_tree;
+
+### Window Functions
+
+#### Row number
+SELECT 
+  name,
+  price,
+  ROW_NUMBER() OVER (ORDER BY price DESC) as row_num
+FROM items;
+
+#### Rank within category
+SELECT 
+  name,
+  category,
+  price,
+  RANK() OVER (PARTITION BY category ORDER BY price DESC) as price_rank
+FROM items;
+
+#### Running total
+SELECT 
+  name,
+  price,
+  SUM(price) OVER (ORDER BY created_at) as running_total
+FROM items;
+
+#### Moving average (3 rows)
+SELECT 
+  name,
+  price,
+  AVG(price) OVER (
+    ORDER BY created_at 
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+  ) as moving_avg
+FROM items;
+
+### JSONB Queries (if you add a jsonb column)
+
+#### Add JSONB column
+ALTER TABLE items ADD COLUMN metadata JSONB;
+
+#### Insert with JSONB
+INSERT INTO items (name, price, metadata)
+VALUES ('Laptop', 1299.99, '{"brand": "Dell", "ram": "16GB", "storage": "512GB SSD"}')
+RETURNING *;
+
+#### Query JSONB field
+SELECT * FROM items WHERE metadata->>'brand' = 'Dell';
+
+#### Query nested JSONB
+SELECT * FROM items WHERE metadata->'specs'->>'ram' = '16GB';
+
+#### JSONB contains
+SELECT * FROM items WHERE metadata @> '{"brand": "Dell"}';
+
+#### Extract JSONB field
+SELECT name, metadata->>'brand' as brand FROM items;
+
+### Full-Text Search
+
+#### Create tsvector column
+ALTER TABLE items ADD COLUMN search_vector tsvector;
+
+#### Update search vector
+UPDATE items 
+SET search_vector = to_tsvector('english', name || ' ' || COALESCE(description, ''));
+
+#### Create index
+CREATE INDEX items_search_idx ON items USING GIN(search_vector);
+
+#### Search
+SELECT * FROM items 
+WHERE search_vector @@ to_tsquery('english', 'laptop & gaming');
+
+#### Search with ranking
+SELECT 
+  name,
+  ts_rank(search_vector, to_tsquery('english', 'laptop')) as rank
+FROM items
+WHERE search_vector @@ to_tsquery('english', 'laptop')
+ORDER BY rank DESC;
+
+### Array Operations (if you add array column)
+
+#### Add array column
+ALTER TABLE items ADD COLUMN tags TEXT[];
+
+#### Insert with array
+INSERT INTO items (name, price, tags)
+VALUES ('Laptop', 1299.99, ARRAY['electronics', 'portable', 'gaming'])
+RETURNING *;
+
+#### Check if array contains value
+SELECT * FROM items WHERE 'electronics' = ANY(tags);
+
+#### Array overlap
+SELECT * FROM items WHERE tags && ARRAY['electronics', 'portable'];
+
+#### Array length
+SELECT name, array_length(tags, 1) as tag_count FROM items;
+
+## Transactions
+
+### Basic transaction
+BEGIN;
+UPDATE items SET quantity = quantity - 1 WHERE id = 1;
+INSERT INTO orders (item_id) VALUES (1);
+COMMIT;
+
+### Transaction with rollback
+BEGIN;
+UPDATE items SET price = 0 WHERE id = 1;
+-- Oh no, mistake!
+ROLLBACK;
+
+### Savepoints
+BEGIN;
+UPDATE items SET quantity = quantity - 1 WHERE id = 1;
+SAVEPOINT sp1;
+UPDATE items SET quantity = quantity - 1 WHERE id = 2;
+-- Oops, rollback last update only
+ROLLBACK TO SAVEPOINT sp1;
+COMMIT;
+
+## Indexes
+
+### Create index
+CREATE INDEX idx_items_price ON items(price);
+
+### Create unique index
+CREATE UNIQUE INDEX idx_items_unique_name ON items(name);
+
+### Create partial index
+CREATE INDEX idx_expensive_items ON items(price) WHERE price > 1000;
+
+### Create GIN index for JSONB
+CREATE INDEX idx_items_metadata ON items USING GIN(metadata);
+
+### Drop index
+DROP INDEX idx_items_price;
+
+## Constraints
+
+### Add NOT NULL constraint
+ALTER TABLE items ALTER COLUMN name SET NOT NULL;
+
+### Add CHECK constraint
+ALTER TABLE items ADD CONSTRAINT price_positive CHECK (price >= 0);
+
+### Add UNIQUE constraint
+ALTER TABLE items ADD CONSTRAINT unique_name UNIQUE (name);
+
+### Add DEFAULT
+ALTER TABLE items ALTER COLUMN quantity SET DEFAULT 0;
+
+## Views
+
+### Create view
+CREATE VIEW expensive_items AS
+SELECT * FROM items WHERE price > 1000;
+
+### Query view
+SELECT * FROM expensive_items;
+
+### Materialized view (cached)
+CREATE MATERIALIZED VIEW category_stats AS
+SELECT 
+  category,
+  COUNT(*) as count,
+  AVG(price) as avg_price
+FROM items
+GROUP BY category;
+
+### Refresh materialized view
+REFRESH MATERIALIZED VIEW category_stats;
+
+## Database Management
+
+### Show all tables
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public';
+
+### Describe table
+\d items
+
+### Show table size
+SELECT pg_size_pretty(pg_total_relation_size('items'));
+
+### Vacuum table
+VACUUM ANALYZE items;
+
+### Reset sequence (auto-increment)
+SELECT setval('items_id_seq', (SELECT MAX(id) FROM items));
+
+## Performance Analysis
+
+### Explain query
+EXPLAIN SELECT * FROM items WHERE category = 'Electronics';
+
+### Explain with execution
+EXPLAIN ANALYZE SELECT * FROM items WHERE price > 1000;
+
+### Show slow queries
+SELECT query, calls, total_time, mean_time
+FROM pg_stat_statements
+ORDER BY mean_time DESC
+LIMIT 10;
+
+## Backup and Restore
+
+### Export table to CSV
+COPY items TO '/tmp/items.csv' CSV HEADER;
+
+### Import from CSV
+COPY items FROM '/tmp/items.csv' CSV HEADER;
+
+### Backup database (command line)
+pg_dump -U postgres learning_db > backup.sql
+
+### Restore database (command line)
+psql -U postgres learning_db < backup.sql
