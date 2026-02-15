@@ -7,7 +7,7 @@
           <div class="flex justify-between items-center">
             <div>
               <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                PostgreSQL Learning Module
+                Redis Learning Module
               </h1>
               <p class="text-sm text-gray-600 dark:text-gray-400">Full-stack CRUD application</p>
             </div>
@@ -58,7 +58,7 @@
       <!-- Footer -->
       <footer class="mt-12 py-6 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-600 dark:text-gray-400">
-          SQLite Learning Module - Built with Vue 3, Vite, and TailwindCSS
+          Redis Learning Module - Built with Vue 3, Vite, and TailwindCSS
         </div>
       </footer>
     </div>
