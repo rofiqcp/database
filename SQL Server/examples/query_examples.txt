@@ -1,0 +1,435 @@
+# SQL Server (T-SQL) Query Examples
+
+This file contains common T-SQL queries for the learning module.
+
+## Basic SELECT Queries
+
+### Get all items
+```sql
+SELECT * FROM items;
+```
+
+### Get items ordered by price (descending)
+```sql
+SELECT * FROM items ORDER BY price DESC;
+```
+
+### Get top 10 items (SQL Server uses TOP, not LIMIT)
+```sql
+SELECT TOP 10 * FROM items ORDER BY created_at DESC;
+```
+
+### Get items with pagination (OFFSET-FETCH)
+```sql
+SELECT * FROM items
+ORDER BY created_at DESC
+OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY;
+```
+
+## Filtering Queries
+
+### Get items by category
+```sql
+SELECT * FROM items WHERE category = N'Electronics';
+```
+
+### Get items in price range
+```sql
+SELECT * FROM items WHERE price BETWEEN 20 AND 100;
+```
+
+### Search items by name (case-insensitive by default)
+```sql
+SELECT * FROM items WHERE name LIKE N'%laptop%';
+```
+
+### Get items with low stock
+```sql
+SELECT * FROM items WHERE quantity < 10;
+```
+
+### NULL handling with ISNULL
+```sql
+SELECT name, ISNULL(description, N'No description') AS description
+FROM items;
+```
+
+## Aggregate Queries
+
+### Count total items
+```sql
+SELECT COUNT(*) AS total_items FROM items;
+```
+
+### Get total value of inventory
+```sql
+SELECT SUM(price * quantity) AS total_value FROM items;
+```
+
+### Get average price by category
+```sql
+SELECT category, AVG(price) AS avg_price, COUNT(*) AS count
+FROM items
+GROUP BY category;
+```
+
+### Get most expensive item
+```sql
+SELECT TOP 1 * FROM items ORDER BY price DESC;
+```
+
+## INSERT Queries
+
+### Insert single item
+```sql
+INSERT INTO items (name, description, category, price, quantity)
+VALUES (N'New Item', N'Description here', N'Category', 99.99, 10);
+```
+
+### Insert and get new ID
+```sql
+INSERT INTO items (name, description, category, price, quantity)
+VALUES (N'New Item', N'Description', N'Category', 99.99, 10);
+SELECT SCOPE_IDENTITY() AS new_id;
+```
+
+### Insert multiple items
+```sql
+INSERT INTO items (name, description, category, price, quantity) VALUES
+  (N'Item 1', N'Description 1', N'Category A', 10.00, 5),
+  (N'Item 2', N'Description 2', N'Category B', 20.00, 10),
+  (N'Item 3', N'Description 3', N'Category A', 30.00, 15);
+```
+
+## UPDATE Queries
+
+### Update single item
+```sql
+UPDATE items
+SET price = 89.99, quantity = 20, updated_at = GETDATE()
+WHERE id = 1;
+```
+
+### Update all items in a category (10% discount)
+```sql
+UPDATE items
+SET price = price * 0.9, updated_at = GETDATE()
+WHERE category = N'Electronics';
+```
+
+## DELETE Queries
+
+### Delete single item
+```sql
+DELETE FROM items WHERE id = 1;
+```
+
+### Delete items with zero quantity
+```sql
+DELETE FROM items WHERE quantity = 0;
+```
+
+### Delete old items
+```sql
+DELETE FROM items
+WHERE created_at < DATEADD(YEAR, -1, GETDATE());
+```
+
+## Advanced Queries
+
+### Common Table Expression (CTE)
+```sql
+WITH CategoryStats AS (
+  SELECT
+    category,
+    COUNT(*) AS item_count,
+    AVG(price) AS avg_price,
+    SUM(price * quantity) AS total_value
+  FROM items
+  GROUP BY category
+)
+SELECT * FROM CategoryStats
+WHERE item_count > 1
+ORDER BY total_value DESC;
+```
+
+### Window Functions - Row Number
+```sql
+SELECT
+  ROW_NUMBER() OVER (ORDER BY price DESC) AS rank,
+  name, price, category
+FROM items;
+```
+
+### Window Functions - Running Total
+```sql
+SELECT
+  name, price,
+  SUM(price) OVER (ORDER BY created_at) AS running_total
+FROM items;
+```
+
+### Window Functions - Rank by Category
+```sql
+SELECT
+  name, category, price,
+  RANK() OVER (PARTITION BY category ORDER BY price DESC) AS category_rank
+FROM items;
+```
+
+### Subquery - items above average price
+```sql
+SELECT * FROM items
+WHERE price > (SELECT AVG(price) FROM items);
+```
+
+### CASE expression
+```sql
+SELECT name, price,
+  CASE
+    WHEN price > 1000 THEN N'Premium'
+    WHEN price > 100 THEN N'Standard'
+    ELSE N'Budget'
+  END AS price_tier
+FROM items;
+```
+
+### Full-text search (multiple columns)
+```sql
+SELECT * FROM items
+WHERE name LIKE N'%search%' OR description LIKE N'%search%';
+```
+
+### Get items created today
+```sql
+SELECT * FROM items
+WHERE CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+```
+
+### Complex filtering
+```sql
+SELECT * FROM items
+WHERE category IN (N'Electronics', N'Furniture')
+  AND price > 50
+  AND quantity > 0
+ORDER BY price ASC;
+```
+
+## Stored Procedure Examples
+
+### Create a stored procedure
+```sql
+CREATE PROCEDURE sp_GetItemsByCategory
+  @Category NVARCHAR(100)
+AS
+BEGIN
+  SET NOCOUNT ON;
+  SELECT * FROM items
+  WHERE category = @Category
+  ORDER BY created_at DESC;
+END;
+GO
+
+-- Execute
+EXEC sp_GetItemsByCategory @Category = N'Electronics';
+```
+
+### Stored procedure with output parameter
+```sql
+CREATE PROCEDURE sp_CreateItem
+  @Name NVARCHAR(255),
+  @Description NVARCHAR(MAX) = NULL,
+  @Category NVARCHAR(100) = NULL,
+  @Price DECIMAL(10,2) = 0,
+  @Quantity INT = 0,
+  @NewId INT OUTPUT
+AS
+BEGIN
+  SET NOCOUNT ON;
+  INSERT INTO items (name, description, category, price, quantity)
+  VALUES (@Name, @Description, @Category, @Price, @Quantity);
+  SET @NewId = SCOPE_IDENTITY();
+END;
+GO
+```
+
+## Index Operations
+
+### Create indexes
+```sql
+CREATE INDEX idx_items_category ON items(category);
+CREATE INDEX idx_items_price ON items(price);
+CREATE INDEX idx_items_name ON items(name);
+```
+
+### View indexes
+```sql
+SELECT name, type_desc, is_unique
+FROM sys.indexes
+WHERE object_id = OBJECT_ID('items');
+```
+
+### View index usage
+```sql
+SELECT
+  i.name AS index_name,
+  s.user_seeks, s.user_scans, s.user_lookups
+FROM sys.dm_db_index_usage_stats s
+JOIN sys.indexes i ON s.object_id = i.object_id AND s.index_id = i.index_id
+WHERE s.object_id = OBJECT_ID('items');
+```
+
+## Table Management
+
+### View table schema
+```sql
+SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'items';
+```
+
+### Get database info
+```sql
+SELECT name, create_date, state_desc
+FROM sys.databases
+WHERE name = 'learning_db';
+```
+
+### Check table size
+```sql
+EXEC sp_spaceused 'items';
+```
+
+## Transaction Examples
+
+### Basic transaction
+```sql
+BEGIN TRANSACTION;
+
+INSERT INTO items (name, price, quantity) VALUES (N'Item A', 10.00, 5);
+UPDATE items SET quantity = quantity - 1 WHERE id = 2;
+
+COMMIT TRANSACTION;
+```
+
+### Transaction with error handling
+```sql
+BEGIN TRY
+  BEGIN TRANSACTION;
+  
+  INSERT INTO items (name, price, quantity) VALUES (N'Item A', 10.00, 5);
+  UPDATE items SET quantity = quantity - 1 WHERE id = 2;
+  
+  COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+  ROLLBACK TRANSACTION;
+  SELECT ERROR_MESSAGE() AS ErrorMessage;
+END CATCH;
+```
+
+## Backup and Maintenance
+
+### Backup database
+```sql
+BACKUP DATABASE learning_db
+TO DISK = '/var/opt/mssql/backup/learning_db.bak'
+WITH FORMAT, COMPRESSION;
+```
+
+### Restore database
+```sql
+RESTORE DATABASE learning_db
+FROM DISK = '/var/opt/mssql/backup/learning_db.bak'
+WITH REPLACE;
+```
+
+### Update statistics
+```sql
+UPDATE STATISTICS items;
+```
+
+### Rebuild indexes
+```sql
+ALTER INDEX ALL ON items REBUILD;
+```
+
+### Check database integrity
+```sql
+DBCC CHECKDB('learning_db');
+```
+
+## Date Functions
+
+### Current date/time
+```sql
+SELECT GETDATE() AS current_datetime;
+SELECT SYSDATETIME() AS precise_datetime;
+SELECT GETUTCDATE() AS utc_datetime;
+```
+
+### Date formatting
+```sql
+SELECT FORMAT(GETDATE(), 'yyyy-MM-dd HH:mm:ss') AS formatted;
+SELECT FORMAT(created_at, 'dd/MM/yyyy') AS date_only FROM items;
+```
+
+### Date arithmetic
+```sql
+SELECT DATEADD(DAY, 7, GETDATE()) AS next_week;
+SELECT DATEADD(MONTH, -1, GETDATE()) AS last_month;
+SELECT DATEDIFF(DAY, created_at, GETDATE()) AS days_ago FROM items;
+```
+
+## String Functions
+
+```sql
+SELECT
+  UPPER(name) AS upper_name,
+  LOWER(category) AS lower_category,
+  LEN(description) AS desc_length,
+  LEFT(name, 10) AS short_name,
+  REPLACE(name, ' ', '-') AS slug
+FROM items;
+```
+
+## Performance Tips
+
+1. **Use TOP** for limiting results instead of fetching all rows
+2. **Create indexes** for frequently searched columns
+3. **Use parameterized queries** for query plan reuse
+4. **UPDATE STATISTICS** periodically for query optimization
+5. **Avoid SELECT *** in production, specify columns
+6. **Use SET NOCOUNT ON** in stored procedures
+7. **Use connection pooling** for efficient connections
+
+## Common T-SQL Functions
+
+### String functions
+```sql
+SELECT UPPER(name), LOWER(category), LEN(description) FROM items;
+SELECT CONCAT(name, ' - ', category) AS full_name FROM items;
+SELECT STRING_AGG(name, ', ') AS all_names FROM items;
+```
+
+### Math functions
+```sql
+SELECT ROUND(price, 2), ABS(quantity - 10), CEILING(price) FROM items;
+```
+
+### NULL functions
+```sql
+SELECT ISNULL(description, N'None') FROM items;
+SELECT COALESCE(description, category, N'Unknown') FROM items;
+```
+
+## Notes
+
+- SQL Server uses NVARCHAR for Unicode strings (prefix with N'text')
+- IDENTITY(1,1) is used for auto-incrementing columns
+- Use SCOPE_IDENTITY() to get the last inserted ID
+- T-SQL uses TOP instead of LIMIT
+- GETDATE() returns current date/time (DATETIME)
+- SYSDATETIME() returns higher precision (DATETIME2)
+- SQL Server is case-insensitive by default for comparisons
+- Use BEGIN TRY...END CATCH for error handling
