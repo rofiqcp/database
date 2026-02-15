@@ -132,7 +132,7 @@ Complete list of features available in the SQLite Learning Module.
 
 ### Potential Backend Additions
 - [ ] Pagination support
-- [ ] Rate limiting
+- [ ] Rate limiting (recommended for production)
 - [ ] Authentication & authorization
 - [ ] File upload support
 - [ ] Audit logging

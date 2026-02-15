@@ -336,7 +336,48 @@ curl http://localhost:3000/health
 
 ## Rate Limiting
 
-Currently no rate limiting is implemented. For production use, consider adding rate limiting middleware.
+Currently no rate limiting is implemented. This is intentional for the learning module to keep the code simple and focused on database operations.
+
+### For Production Use
+
+Consider adding rate limiting middleware to prevent abuse:
+
+```bash
+npm install express-rate-limit
+```
+
+```javascript
+// In server.js, add:
+const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+// Apply to all API routes
+app.use('/api/', limiter);
+```
+
+For more granular control, apply different limits to different endpoints:
+
+```javascript
+// Higher limit for read operations
+const readLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200
+});
+
+// Lower limit for write operations
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50
+});
+
+app.get('/api/data', readLimiter, routes);
+app.post('/api/data', writeLimiter, routes);
+```
 
 ---
 

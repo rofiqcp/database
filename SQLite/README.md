@@ -228,6 +228,19 @@ This module is perfect for learning:
 - TailwindCSS styling
 - Responsive design principles
 
+## ⚠️ Security Note
+
+This is a **learning module** designed for educational purposes. For production deployment, consider adding:
+
+- **Rate Limiting**: Prevent API abuse (see API_DOCS.md for examples)
+- **Authentication**: Add user authentication and authorization
+- **HTTPS**: Use SSL/TLS in production
+- **Input Sanitization**: Already included, but review for your use case
+- **Environment Security**: Secure your .env files and credentials
+- **CORS**: Configure CORS_ORIGIN for production domains
+
+See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) and [API_DOCS.md](docs/API_DOCS.md) for more security recommendations.
+
 ## 🤝 Use Cases
 
 - **Learning**: Educational tool for full-stack development
