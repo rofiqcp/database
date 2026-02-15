@@ -1,0 +1,514 @@
+# SQL Server (T-SQL) Query Examples
+
+This file contains example T-SQL queries and operations for the Learning Module.
+Use these in SQL Server Management Studio (SSMS), Azure Data Studio, or sqlcmd.
+
+## Connection
+
+-- Connect to SQL Server using sqlcmd
+sqlcmd -S localhost -U sa -P "YourStrong!Password"
+
+-- Use the learning database
+USE learning_db;
+GO
+
+-- Show all databases
+SELECT name FROM sys.databases;
+GO
+
+-- Show all tables
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE';
+GO
+
+## Basic Queries
+
+-- Find all items
+SELECT * FROM items;
+
+-- Find all items ordered by name
+SELECT * FROM items ORDER BY name;
+
+-- Count all items
+SELECT COUNT(*) AS total_items FROM items;
+
+-- Find one item by ID
+SELECT * FROM items WHERE id = 1;
+
+-- Find top 5 items
+SELECT TOP 5 * FROM items ORDER BY created_at DESC;
+
+## Filtering
+
+-- Find items by category
+SELECT * FROM items WHERE category = N'Electronics';
+
+-- Find items by name
+SELECT * FROM items WHERE name = N'Laptop';
+
+-- Find items with exact price
+SELECT * FROM items WHERE price = 999.99;
+
+-- Find items with price greater than 100
+SELECT * FROM items WHERE price > 100;
+
+-- Find items with price greater than or equal to 100
+SELECT * FROM items WHERE price >= 100;
+
+-- Find items with price less than 1000
+SELECT * FROM items WHERE price < 1000;
+
+-- Find items with price less than or equal to 1000
+SELECT * FROM items WHERE price <= 1000;
+
+-- Find items with price between 100 and 1000
+SELECT * FROM items WHERE price BETWEEN 100 AND 1000;
+
+-- Find items NOT equal to a value
+SELECT * FROM items WHERE category <> N'Electronics';
+
+-- Find items in a list of values
+SELECT * FROM items WHERE category IN (N'Electronics', N'Books', N'Toys');
+
+-- Find items NOT in a list of values
+SELECT * FROM items WHERE category NOT IN (N'Electronics', N'Clothing');
+
+## Text Search
+
+-- Search in name (case-insensitive by default)
+SELECT * FROM items WHERE name LIKE N'%laptop%';
+
+-- Search in description
+SELECT * FROM items WHERE description LIKE N'%gaming%';
+
+-- Search starting with
+SELECT * FROM items WHERE name LIKE N'L%';
+
+-- Search ending with
+SELECT * FROM items WHERE name LIKE N'%top';
+
+-- Search in both name and description
+SELECT * FROM items
+WHERE name LIKE N'%laptop%' OR description LIKE N'%laptop%';
+
+## Logical Operators
+
+-- AND - Items in Electronics category with price > 500
+SELECT * FROM items
+WHERE category = N'Electronics' AND price > 500;
+
+-- OR - Items in Electronics OR Books category
+SELECT * FROM items
+WHERE category = N'Electronics' OR category = N'Books';
+
+-- NOT - Items NOT in Electronics category
+SELECT * FROM items
+WHERE NOT category = N'Electronics';
+
+-- Complex query - (Electronics OR Books) AND price < 500
+SELECT * FROM items
+WHERE (category = N'Electronics' OR category = N'Books')
+  AND price < 500;
+
+## NULL Checks
+
+-- Items where description is not null
+SELECT * FROM items WHERE description IS NOT NULL;
+
+-- Items where description is null
+SELECT * FROM items WHERE description IS NULL;
+
+-- Items where category has a value
+SELECT * FROM items WHERE category IS NOT NULL AND category <> '';
+
+## Sorting
+
+-- Sort by name (ascending)
+SELECT * FROM items ORDER BY name ASC;
+
+-- Sort by name (descending)
+SELECT * FROM items ORDER BY name DESC;
+
+-- Sort by price (descending)
+SELECT * FROM items ORDER BY price DESC;
+
+-- Sort by multiple fields
+SELECT * FROM items ORDER BY category ASC, price DESC;
+
+-- Sort by created_at (newest first)
+SELECT * FROM items ORDER BY created_at DESC;
+
+## Limiting and Pagination
+
+-- Get first 5 items
+SELECT TOP 5 * FROM items;
+
+-- Pagination using OFFSET/FETCH (page 2 with 10 items per page)
+SELECT * FROM items
+ORDER BY id
+OFFSET 10 ROWS
+FETCH NEXT 10 ROWS ONLY;
+
+-- Top 5 most expensive items
+SELECT TOP 5 * FROM items ORDER BY price DESC;
+
+-- Top 3 items per category (using ROW_NUMBER)
+WITH RankedItems AS (
+  SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY price DESC) AS rn
+  FROM items
+)
+SELECT * FROM RankedItems WHERE rn <= 3;
+
+## Projection (Select specific columns)
+
+-- Select only name and price
+SELECT name, price FROM items;
+
+-- Select with alias
+SELECT name AS item_name, price AS item_price FROM items;
+
+-- Select with calculated field
+SELECT name, price, quantity, (price * quantity) AS total_value FROM items;
+
+## Aggregation
+
+-- Count items by category
+SELECT category, COUNT(*) AS item_count
+FROM items
+GROUP BY category;
+
+-- Average price by category
+SELECT category, AVG(price) AS avg_price
+FROM items
+GROUP BY category;
+
+-- Total value (price * quantity) by category
+SELECT category, SUM(price * quantity) AS total_value
+FROM items
+GROUP BY category;
+
+-- Items with price > 100, grouped by category
+SELECT category, COUNT(*) AS item_count
+FROM items
+WHERE price > 100
+GROUP BY category;
+
+-- Top 3 categories by total items
+SELECT TOP 3 category, COUNT(*) AS item_count
+FROM items
+GROUP BY category
+ORDER BY item_count DESC;
+
+-- Statistics by category
+SELECT
+  category,
+  COUNT(*) AS item_count,
+  AVG(price) AS avg_price,
+  MIN(price) AS min_price,
+  MAX(price) AS max_price,
+  SUM(quantity) AS total_quantity
+FROM items
+GROUP BY category
+ORDER BY avg_price DESC;
+
+-- HAVING clause - Categories with more than 2 items
+SELECT category, COUNT(*) AS item_count
+FROM items
+GROUP BY category
+HAVING COUNT(*) > 2;
+
+## Window Functions
+
+-- Row number for each item
+SELECT id, name, category, price,
+  ROW_NUMBER() OVER (ORDER BY price DESC) AS price_rank
+FROM items;
+
+-- Rank within category
+SELECT id, name, category, price,
+  RANK() OVER (PARTITION BY category ORDER BY price DESC) AS category_rank
+FROM items;
+
+-- Running total by category
+SELECT id, name, category, price,
+  SUM(price) OVER (PARTITION BY category ORDER BY id) AS running_total
+FROM items;
+
+-- Average price per category alongside each item
+SELECT id, name, category, price,
+  AVG(price) OVER (PARTITION BY category) AS avg_category_price
+FROM items;
+
+## Common Table Expressions (CTEs)
+
+-- Simple CTE
+WITH ExpensiveItems AS (
+  SELECT * FROM items WHERE price > 100
+)
+SELECT * FROM ExpensiveItems ORDER BY price DESC;
+
+-- CTE with aggregation
+WITH CategoryStats AS (
+  SELECT
+    category,
+    COUNT(*) AS item_count,
+    AVG(price) AS avg_price,
+    SUM(quantity) AS total_quantity
+  FROM items
+  GROUP BY category
+)
+SELECT * FROM CategoryStats
+WHERE avg_price > 50
+ORDER BY avg_price DESC;
+
+-- Recursive CTE (for hierarchical data)
+-- This is a simple counter example
+WITH Numbers AS (
+  SELECT 1 AS n
+  UNION ALL
+  SELECT n + 1 FROM Numbers WHERE n < 10
+)
+SELECT n FROM Numbers;
+
+## Insert Operations
+
+-- Insert one item
+INSERT INTO items (name, description, category, price, quantity, created_at, updated_at)
+VALUES (N'Smartphone', N'Latest model smartphone', N'Electronics', 699.99, 25, GETDATE(), GETDATE());
+
+-- Insert multiple items
+INSERT INTO items (name, description, category, price, quantity, created_at, updated_at)
+VALUES
+  (N'Laptop', N'Gaming laptop', N'Electronics', 1299.99, 10, GETDATE(), GETDATE()),
+  (N'Book', N'Programming guide', N'Books', 49.99, 100, GETDATE(), GETDATE());
+
+-- Insert with OUTPUT (return inserted data)
+INSERT INTO items (name, description, category, price, quantity, created_at, updated_at)
+OUTPUT INSERTED.*
+VALUES (N'Tablet', N'10-inch tablet', N'Electronics', 499.99, 20, GETDATE(), GETDATE());
+
+## Update Operations
+
+-- Update one item by name
+UPDATE items
+SET price = 1199.99, updated_at = GETDATE()
+WHERE name = N'Laptop';
+
+-- Update by ID
+UPDATE items
+SET quantity = 15, updated_at = GETDATE()
+WHERE id = 1;
+
+-- Update with OUTPUT (return updated data)
+UPDATE items
+SET price = 999.99, updated_at = GETDATE()
+OUTPUT INSERTED.*
+WHERE id = 1;
+
+-- Update multiple items
+UPDATE items
+SET updated_at = GETDATE()
+WHERE category = N'Electronics';
+
+-- Increase price by 10%
+UPDATE items
+SET price = price * 1.10, updated_at = GETDATE()
+WHERE category = N'Electronics';
+
+-- Set minimum quantity
+UPDATE items
+SET quantity = 0
+WHERE quantity < 0;
+
+## Delete Operations
+
+-- Delete one item by name
+DELETE FROM items WHERE name = N'Test Item';
+
+-- Delete by ID
+DELETE FROM items WHERE id = 1;
+
+-- Delete multiple items
+DELETE FROM items WHERE category = N'Obsolete';
+
+-- Delete all items with price 0
+DELETE FROM items WHERE price = 0;
+
+-- Delete all items (use with caution!)
+DELETE FROM items;
+-- Or
+TRUNCATE TABLE items;
+
+## Indexes
+
+-- Show all indexes
+SELECT
+  i.name AS index_name,
+  i.type_desc AS index_type,
+  c.name AS column_name
+FROM sys.indexes i
+JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+WHERE i.object_id = OBJECT_ID('items');
+
+-- Create index on category
+CREATE INDEX idx_items_category ON items(category);
+
+-- Create index on name
+CREATE INDEX idx_items_name ON items(name);
+
+-- Create composite index
+CREATE INDEX idx_items_category_price ON items(category, price DESC);
+
+-- Create unique index
+CREATE UNIQUE INDEX idx_items_name_unique ON items(name);
+
+-- Drop index
+DROP INDEX idx_items_category ON items;
+
+## Table Operations
+
+-- Get table information
+EXEC sp_help 'items';
+
+-- Get table size
+EXEC sp_spaceused 'items';
+
+-- Count rows
+SELECT COUNT(*) AS row_count FROM items;
+
+-- Distinct values
+SELECT DISTINCT category FROM items;
+
+-- Check table exists
+SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'items';
+
+-- Get column information
+SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'items';
+
+## Backup and Restore
+
+-- Full backup (run in sqlcmd or SSMS)
+BACKUP DATABASE learning_db
+TO DISK = 'C:\Backup\learning_db.bak'
+WITH FORMAT, INIT;
+
+-- Differential backup
+BACKUP DATABASE learning_db
+TO DISK = 'C:\Backup\learning_db_diff.bak'
+WITH DIFFERENTIAL;
+
+-- Restore from backup
+RESTORE DATABASE learning_db
+FROM DISK = 'C:\Backup\learning_db.bak'
+WITH REPLACE;
+
+## Useful Commands
+
+-- Show current database
+SELECT DB_NAME();
+
+-- Show SQL Server version
+SELECT @@VERSION;
+
+-- Show server name
+SELECT @@SERVERNAME;
+
+-- Show current user
+SELECT CURRENT_USER;
+
+-- Show database size
+EXEC sp_helpdb 'learning_db';
+
+-- Drop table (careful!)
+DROP TABLE IF EXISTS items;
+
+-- Drop database (very careful!)
+DROP DATABASE IF EXISTS learning_db;
+
+-- Create database
+CREATE DATABASE learning_db;
+
+## Performance
+
+-- Show query execution plan
+SET SHOWPLAN_ALL ON;
+GO
+SELECT * FROM items WHERE category = N'Electronics';
+GO
+SET SHOWPLAN_ALL OFF;
+GO
+
+-- Show I/O statistics
+SET STATISTICS IO ON;
+SELECT * FROM items WHERE category = N'Electronics';
+SET STATISTICS IO OFF;
+
+-- Show time statistics
+SET STATISTICS TIME ON;
+SELECT * FROM items WHERE category = N'Electronics';
+SET STATISTICS TIME OFF;
+
+-- Check index usage
+SELECT
+  OBJECT_NAME(s.object_id) AS table_name,
+  i.name AS index_name,
+  s.user_seeks,
+  s.user_scans,
+  s.user_lookups,
+  s.user_updates
+FROM sys.dm_db_index_usage_stats s
+JOIN sys.indexes i ON s.object_id = i.object_id AND s.index_id = i.index_id
+WHERE s.database_id = DB_ID('learning_db');
+
+## Advanced Queries
+
+-- MERGE statement (upsert)
+MERGE INTO items AS target
+USING (VALUES (N'Laptop', 1299.99)) AS source(name, price)
+ON target.name = source.name
+WHEN MATCHED THEN
+  UPDATE SET price = source.price, updated_at = GETDATE()
+WHEN NOT MATCHED THEN
+  INSERT (name, price, created_at, updated_at)
+  VALUES (source.name, source.price, GETDATE(), GETDATE());
+
+-- CASE expression
+SELECT name, price,
+  CASE
+    WHEN price >= 1000 THEN 'Premium'
+    WHEN price >= 100 THEN 'Standard'
+    ELSE 'Budget'
+  END AS price_tier
+FROM items;
+
+-- PIVOT - Categories as columns
+SELECT * FROM (
+  SELECT category, price FROM items
+) AS SourceTable
+PIVOT (
+  AVG(price) FOR category IN ([Electronics], [Books], [Furniture])
+) AS PivotTable;
+
+-- String aggregation (SQL Server 2017+)
+SELECT category, STRING_AGG(name, ', ') AS item_names
+FROM items
+GROUP BY category;
+
+-- JSON output
+SELECT * FROM items
+FOR JSON AUTO;
+
+-- Items updated in last 24 hours
+SELECT * FROM items
+WHERE updated_at >= DATEADD(HOUR, -24, GETDATE());
+
+-- Date formatting
+SELECT name, FORMAT(created_at, 'yyyy-MM-dd HH:mm:ss') AS formatted_date
+FROM items;
+
+---
+
+For more T-SQL examples and documentation:
+https://docs.microsoft.com/en-us/sql/t-sql/language-reference
