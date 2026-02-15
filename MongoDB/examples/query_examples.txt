@@ -1,0 +1,421 @@
+# MongoDB Query Examples
+
+This file contains common MongoDB queries for the learning module.
+All examples use the mongosh shell or can be adapted for the Node.js driver.
+
+## Basic Find Queries
+
+### Get all items
+```javascript
+db.items.find()
+```
+
+### Get all items (formatted output)
+```javascript
+db.items.find().pretty()
+```
+
+### Get items sorted by price (descending)
+```javascript
+db.items.find().sort({ price: -1 })
+```
+
+### Get items with pagination
+```javascript
+db.items.find().skip(0).limit(10)
+```
+
+## Filtering Queries
+
+### Get items by category
+```javascript
+db.items.find({ category: "Electronics" })
+```
+
+### Get items in price range
+```javascript
+db.items.find({ price: { $gte: 20, $lte: 100 } })
+```
+
+### Search items by name (case-insensitive regex)
+```javascript
+db.items.find({ name: { $regex: /laptop/i } })
+```
+
+### Get items with low stock
+```javascript
+db.items.find({ quantity: { $lt: 10 } })
+```
+
+### Get items matching multiple conditions
+```javascript
+db.items.find({
+  category: "Electronics",
+  price: { $gt: 50 },
+  quantity: { $gt: 0 }
+}).sort({ price: 1 })
+```
+
+## Aggregation Queries
+
+### Count total items
+```javascript
+db.items.countDocuments()
+```
+
+### Get total value of inventory
+```javascript
+db.items.aggregate([
+  {
+    $group: {
+      _id: null,
+      totalValue: { $sum: { $multiply: ["$price", "$quantity"] } }
+    }
+  }
+])
+```
+
+### Get average price by category
+```javascript
+db.items.aggregate([
+  {
+    $group: {
+      _id: "$category",
+      avgPrice: { $avg: "$price" },
+      count: { $sum: 1 }
+    }
+  },
+  { $sort: { avgPrice: -1 } }
+])
+```
+
+### Get most expensive item
+```javascript
+db.items.find().sort({ price: -1 }).limit(1)
+```
+
+### Category statistics
+```javascript
+db.items.aggregate([
+  {
+    $group: {
+      _id: "$category",
+      totalItems: { $sum: 1 },
+      totalQuantity: { $sum: "$quantity" },
+      avgPrice: { $avg: "$price" },
+      minPrice: { $min: "$price" },
+      maxPrice: { $max: "$price" }
+    }
+  },
+  { $sort: { totalItems: -1 } }
+])
+```
+
+## Insert Operations
+
+### Insert single item
+```javascript
+db.items.insertOne({
+  name: "New Item",
+  description: "Description here",
+  category: "Category",
+  price: 99.99,
+  quantity: 10,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+})
+```
+
+### Insert multiple items
+```javascript
+db.items.insertMany([
+  { name: "Item 1", description: "Desc 1", category: "A", price: 10.00, quantity: 5 },
+  { name: "Item 2", description: "Desc 2", category: "B", price: 20.00, quantity: 10 },
+  { name: "Item 3", description: "Desc 3", category: "A", price: 30.00, quantity: 15 }
+])
+```
+
+## Update Operations
+
+### Update single item
+```javascript
+db.items.updateOne(
+  { _id: ObjectId("65a1b2c3d4e5f6a7b8c9d0e1") },
+  { $set: { price: 89.99, quantity: 20, updated_at: new Date().toISOString() } }
+)
+```
+
+### Update all items in a category (10% discount)
+```javascript
+db.items.updateMany(
+  { category: "Electronics" },
+  { $mul: { price: 0.9 } }
+)
+```
+
+### Increment quantity
+```javascript
+db.items.updateOne(
+  { _id: ObjectId("65a1b2c3d4e5f6a7b8c9d0e1") },
+  { $inc: { quantity: 5 } }
+)
+```
+
+### Add a field to all documents
+```javascript
+db.items.updateMany(
+  {},
+  { $set: { status: "active" } }
+)
+```
+
+## Delete Operations
+
+### Delete single item
+```javascript
+db.items.deleteOne({ _id: ObjectId("65a1b2c3d4e5f6a7b8c9d0e1") })
+```
+
+### Delete items with zero quantity
+```javascript
+db.items.deleteMany({ quantity: 0 })
+```
+
+### Delete items by category
+```javascript
+db.items.deleteMany({ category: "Test" })
+```
+
+## Advanced Queries
+
+### Text search (requires text index)
+```javascript
+// Create text index first
+db.items.createIndex({ name: "text", description: "text" })
+
+// Then search
+db.items.find({ $text: { $search: "laptop gaming" } })
+```
+
+### Search with OR condition
+```javascript
+db.items.find({
+  $or: [
+    { name: { $regex: /laptop/i } },
+    { description: { $regex: /laptop/i } }
+  ]
+})
+```
+
+### Get items created today
+```javascript
+const today = new Date()
+today.setHours(0, 0, 0, 0)
+db.items.find({ created_at: { $gte: today.toISOString() } })
+```
+
+### Items above average price
+```javascript
+db.items.aggregate([
+  {
+    $group: {
+      _id: null,
+      avgPrice: { $avg: "$price" }
+    }
+  },
+  {
+    $lookup: {
+      from: "items",
+      let: { avg: "$avgPrice" },
+      pipeline: [
+        { $match: { $expr: { $gt: ["$price", "$$avg"] } } }
+      ],
+      as: "aboveAverage"
+    }
+  },
+  { $unwind: "$aboveAverage" },
+  { $replaceRoot: { newRoot: "$aboveAverage" } }
+])
+```
+
+## Aggregation Pipeline Examples
+
+### Pipeline: Category summary with percentage
+```javascript
+db.items.aggregate([
+  {
+    $facet: {
+      total: [{ $count: "count" }],
+      byCategory: [
+        { $group: { _id: "$category", count: { $sum: 1 } } }
+      ]
+    }
+  },
+  { $unwind: "$total" },
+  { $unwind: "$byCategory" },
+  {
+    $project: {
+      category: "$byCategory._id",
+      count: "$byCategory.count",
+      percentage: {
+        $multiply: [
+          { $divide: ["$byCategory.count", "$total.count"] },
+          100
+        ]
+      }
+    }
+  }
+])
+```
+
+### Pipeline: Price range buckets
+```javascript
+db.items.aggregate([
+  {
+    $bucket: {
+      groupBy: "$price",
+      boundaries: [0, 25, 50, 100, 500, 2000],
+      default: "Other",
+      output: {
+        count: { $sum: 1 },
+        items: { $push: "$name" }
+      }
+    }
+  }
+])
+```
+
+## Index Operations
+
+### Create indexes
+```javascript
+db.items.createIndex({ category: 1 })
+db.items.createIndex({ price: -1 })
+db.items.createIndex({ name: 1 })
+db.items.createIndex({ category: 1, price: -1 })  // Compound index
+```
+
+### View indexes
+```javascript
+db.items.getIndexes()
+```
+
+### Drop an index
+```javascript
+db.items.dropIndex("category_1")
+```
+
+## Collection Management
+
+### View collection stats
+```javascript
+db.items.stats()
+```
+
+### Get database info
+```javascript
+db.stats()
+```
+
+### List all collections
+```javascript
+show collections
+```
+
+### Drop collection
+```javascript
+db.items.drop()
+```
+
+## Schema Validation
+
+### Add validation rules
+```javascript
+db.runCommand({
+  collMod: "items",
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name"],
+      properties: {
+        name: { bsonType: "string", description: "must be a string" },
+        price: { bsonType: "double", minimum: 0, description: "must be >= 0" },
+        quantity: { bsonType: "int", minimum: 0, description: "must be >= 0" }
+      }
+    }
+  }
+})
+```
+
+## Backup and Export
+
+### Export collection to JSON
+```bash
+mongoexport --db learning_db --collection items --out items.json --jsonArray
+```
+
+### Import from JSON
+```bash
+mongoimport --db learning_db --collection items --file items.json --jsonArray
+```
+
+### Dump entire database
+```bash
+mongodump --db learning_db --out ./backup/
+```
+
+### Restore database
+```bash
+mongorestore --db learning_db ./backup/learning_db/
+```
+
+## Performance Tips
+
+1. **Use indexes** for frequently queried fields
+2. **Use projections** to return only needed fields
+3. **Use aggregation** for complex data processing
+4. **Avoid $regex** without anchors on large collections
+5. **Use covered queries** where possible (query + projection match index)
+6. **Use explain()** to analyze query performance
+
+## Common MongoDB Operators
+
+### Comparison
+```javascript
+$eq    // Equal
+$ne    // Not equal
+$gt    // Greater than
+$gte   // Greater than or equal
+$lt    // Less than
+$lte   // Less than or equal
+$in    // In array
+$nin   // Not in array
+```
+
+### Logical
+```javascript
+$and   // Logical AND
+$or    // Logical OR
+$not   // Logical NOT
+$nor   // Logical NOR
+```
+
+### Update
+```javascript
+$set   // Set field value
+$unset // Remove field
+$inc   // Increment value
+$mul   // Multiply value
+$push  // Add to array
+$pull  // Remove from array
+$addToSet // Add unique to array
+```
+
+## Notes
+
+- MongoDB is case-sensitive by default for queries
+- Use `$regex` with `$options: 'i'` for case-insensitive search
+- ObjectId contains a timestamp component
+- Documents have a 16MB size limit
+- Collection names are case-sensitive
+- Use bulkWrite for multiple operations in a single call
