@@ -1,0 +1,360 @@
+# HBase Query Examples
+
+This file contains common HBase Shell commands and operations for the learning module.
+
+## Table Management
+
+### Create table with column families
+```
+create 'items', 'info', 'meta'
+```
+
+### Create table with configuration
+```
+create 'items',
+  { NAME => 'info', VERSIONS => 3, BLOOMFILTER => 'ROW' },
+  { NAME => 'meta', VERSIONS => 1, COMPRESSION => 'SNAPPY' }
+```
+
+### List all tables
+```
+list
+```
+
+### Describe table structure
+```
+describe 'items'
+```
+
+### Check if table exists
+```
+exists 'items'
+```
+
+### Disable and drop table
+```
+disable 'items'
+drop 'items'
+```
+
+## Put (Insert/Update) Operations
+
+### Insert a single cell
+```
+put 'items', 'row1', 'info:name', 'Laptop'
+```
+
+### Insert multiple cells for one row
+```
+put 'items', 'row1', 'info:name', 'Laptop'
+put 'items', 'row1', 'info:description', 'Gaming laptop with RTX 4070'
+put 'items', 'row1', 'info:category', 'Electronics'
+put 'items', 'row1', 'meta:price', '1299.99'
+put 'items', 'row1', 'meta:quantity', '5'
+put 'items', 'row1', 'meta:created_at', '2024-01-01T10:00:00Z'
+```
+
+### Insert another item
+```
+put 'items', 'row2', 'info:name', 'Wireless Mouse'
+put 'items', 'row2', 'info:description', 'Ergonomic wireless mouse'
+put 'items', 'row2', 'info:category', 'Electronics'
+put 'items', 'row2', 'meta:price', '29.99'
+put 'items', 'row2', 'meta:quantity', '50'
+```
+
+## Get (Read) Operations
+
+### Get entire row
+```
+get 'items', 'row1'
+```
+
+### Get specific column family
+```
+get 'items', 'row1', 'info'
+```
+
+### Get specific column
+```
+get 'items', 'row1', 'info:name'
+```
+
+### Get with timestamp
+```
+get 'items', 'row1', { COLUMN => 'info:name', TIMESTAMP => 1704067200000 }
+```
+
+### Get multiple versions
+```
+get 'items', 'row1', { COLUMN => 'info:name', VERSIONS => 3 }
+```
+
+## Scan Operations
+
+### Scan all rows
+```
+scan 'items'
+```
+
+### Scan with row limit
+```
+scan 'items', { LIMIT => 10 }
+```
+
+### Scan specific columns
+```
+scan 'items', { COLUMNS => ['info:name', 'meta:price'] }
+```
+
+### Scan with row key range
+```
+scan 'items', { STARTROW => 'row1', STOPROW => 'row5' }
+```
+
+### Scan with row key prefix
+```
+scan 'items', { ROWPREFIXFILTER => 'row' }
+```
+
+## Filter Operations
+
+### Value filter - exact match
+```
+scan 'items', { FILTER => "SingleColumnValueFilter('info', 'category', =, 'binary:Electronics')" }
+```
+
+### Value filter - substring match
+```
+scan 'items', { FILTER => "SingleColumnValueFilter('info', 'name', =, 'substring:laptop')" }
+```
+
+### Prefix filter on row key
+```
+scan 'items', { FILTER => "PrefixFilter('user_')" }
+```
+
+### Column prefix filter
+```
+scan 'items', { FILTER => "ColumnPrefixFilter('name')" }
+```
+
+### Multiple filters (AND)
+```
+scan 'items', { FILTER => "SingleColumnValueFilter('info', 'category', =, 'binary:Electronics') AND SingleColumnValueFilter('meta', 'price', >, 'binary:100')" }
+```
+
+### Page filter (limit results)
+```
+scan 'items', { FILTER => "PageFilter(10)" }
+```
+
+## Delete Operations
+
+### Delete specific cell
+```
+delete 'items', 'row1', 'info:description'
+```
+
+### Delete entire row
+```
+deleteall 'items', 'row1'
+```
+
+### Delete with timestamp
+```
+delete 'items', 'row1', 'info:name', 1704067200000
+```
+
+## Count Operations
+
+### Count all rows
+```
+count 'items'
+```
+
+### Count with interval reporting
+```
+count 'items', INTERVAL => 1000
+```
+
+## Increment Operations
+
+### Increment a counter
+```
+incr 'items', 'row1', 'meta:quantity', 1
+```
+
+### Decrement a counter
+```
+incr 'items', 'row1', 'meta:quantity', -1
+```
+
+## Namespace Operations
+
+### Create namespace
+```
+create_namespace 'learning'
+```
+
+### List namespaces
+```
+list_namespace
+```
+
+### Create table in namespace
+```
+create 'learning:items', 'info', 'meta'
+```
+
+### Drop namespace
+```
+drop_namespace 'learning'
+```
+
+## Table Alteration
+
+### Add column family
+```
+alter 'items', NAME => 'audit'
+```
+
+### Modify column family settings
+```
+alter 'items', NAME => 'info', VERSIONS => 5
+```
+
+### Remove column family
+```
+alter 'items', NAME => 'audit', METHOD => 'delete'
+```
+
+### Set max versions
+```
+alter 'items', NAME => 'info', VERSIONS => 3
+```
+
+## Snapshots
+
+### Create snapshot
+```
+snapshot 'items', 'items_snapshot_20240101'
+```
+
+### List snapshots
+```
+list_snapshots
+```
+
+### Restore snapshot
+```
+disable 'items'
+restore_snapshot 'items_snapshot_20240101'
+enable 'items'
+```
+
+### Delete snapshot
+```
+delete_snapshot 'items_snapshot_20240101'
+```
+
+## Bulk Load Operations
+
+### Truncate table (delete all data, keep schema)
+```
+truncate 'items'
+```
+
+### Import from TSV file (via command line)
+```bash
+hbase org.apache.hadoop.hbase.mapreduce.ImportTsv \
+  -Dimporttsv.columns=HBASE_ROW_KEY,info:name,info:category,meta:price \
+  items /path/to/data.tsv
+```
+
+## REST API Examples (Stargate)
+
+### Get cluster version
+```bash
+curl http://localhost:8080/version/cluster
+```
+
+### Get table schema
+```bash
+curl -H "Accept: application/json" http://localhost:8080/items/schema
+```
+
+### Get a row
+```bash
+curl -H "Accept: application/json" http://localhost:8080/items/row1
+```
+
+### Scan table (all rows)
+```bash
+curl -H "Accept: application/json" http://localhost:8080/items/*
+```
+
+### Put data via REST
+```bash
+# Note: REST API requires Base64-encoded values
+curl -X PUT http://localhost:8080/items/row1/info:name \
+  -H "Content-Type: application/octet-stream" \
+  -d "Laptop"
+```
+
+### Delete a row via REST
+```bash
+curl -X DELETE http://localhost:8080/items/row1
+```
+
+## Performance Tips
+
+1. **Row key design** is the most important performance factor
+2. **Pre-split tables** to avoid region hotspots
+3. **Use batch operations** for bulk writes
+4. **Enable bloom filters** for faster lookups
+5. **Set appropriate versions** (fewer = less storage)
+6. **Use compression** (Snappy or LZ4) for large datasets
+7. **Avoid full table scans** when possible
+8. **Use filters** to reduce data transfer
+9. **Cache frequently accessed rows** in block cache
+10. **Monitor RegionServer** health and balance
+
+## Common HBase Shell Functions
+
+### Status and cluster info
+```
+status
+status 'simple'
+status 'detailed'
+```
+
+### Table regions info
+```
+list_regions 'items'
+```
+
+### Compact a table
+```
+compact 'items'
+major_compact 'items'
+```
+
+### Enable/disable table
+```
+disable 'items'
+enable 'items'
+is_enabled 'items'
+is_disabled 'items'
+```
+
+## Notes
+
+- All values in HBase are stored as byte arrays
+- Row keys are sorted lexicographically
+- Column families must be defined at table creation
+- Column qualifiers can be added dynamically
+- Each cell can have multiple versions (timestamps)
+- Scans return results in row key order
+- Filters reduce data transferred but not data scanned
+- Use salting or hashing for row keys to avoid hotspots
