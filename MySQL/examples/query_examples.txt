@@ -1,0 +1,549 @@
+# MySQL Query Examples
+
+## Database Management
+
+### Show all databases
+SHOW DATABASES;
+
+### Select database
+USE learning_db;
+
+### Show all tables
+SHOW TABLES;
+
+### Describe table structure
+DESCRIBE items;
+
+### Show create table statement
+SHOW CREATE TABLE items;
+
+### Show table status (engine, rows, size)
+SHOW TABLE STATUS LIKE 'items';
+
+## Basic Queries
+
+### Select all items
+SELECT * FROM items;
+
+### Select specific columns
+SELECT id, name, price FROM items;
+
+### Select with condition
+SELECT * FROM items WHERE category = 'Electronics';
+
+### Select with multiple conditions
+SELECT * FROM items WHERE category = 'Electronics' AND price > 1000;
+
+### Select with OR condition
+SELECT * FROM items WHERE category = 'Electronics' OR category = 'Books';
+
+### Select with BETWEEN
+SELECT * FROM items WHERE price BETWEEN 100 AND 500;
+
+### Select with IN
+SELECT * FROM items WHERE category IN ('Electronics', 'Books', 'Clothing');
+
+### Select with NULL check
+SELECT * FROM items WHERE description IS NOT NULL;
+
+### Select with NOT NULL
+SELECT * FROM items WHERE description IS NULL;
+
+## Pattern Matching
+
+### LIKE (case-insensitive with utf8mb4 collation)
+SELECT * FROM items WHERE name LIKE '%laptop%';
+
+### Case-sensitive LIKE (using BINARY)
+SELECT * FROM items WHERE BINARY name LIKE '%Laptop%';
+
+### Starts with
+SELECT * FROM items WHERE name LIKE 'gaming%';
+
+### Ends with
+SELECT * FROM items WHERE name LIKE '%pro';
+
+### Single character wildcard
+SELECT * FROM items WHERE name LIKE 'Lap___';
+
+## Sorting
+
+### Sort ascending
+SELECT * FROM items ORDER BY price ASC;
+
+### Sort descending
+SELECT * FROM items ORDER BY price DESC;
+
+### Multiple sort columns
+SELECT * FROM items ORDER BY category, price DESC;
+
+### Sort by date
+SELECT * FROM items ORDER BY created_at DESC;
+
+## Limiting Results
+
+### Limit rows
+SELECT * FROM items LIMIT 10;
+
+### Skip and limit (pagination)
+SELECT * FROM items LIMIT 10 OFFSET 20;
+
+### MySQL shorthand for OFFSET
+SELECT * FROM items LIMIT 20, 10;
+
+### Top 5 most expensive
+SELECT * FROM items ORDER BY price DESC LIMIT 5;
+
+## Aggregate Functions
+
+### Count all items
+SELECT COUNT(*) FROM items;
+
+### Count by category
+SELECT category, COUNT(*) as count FROM items GROUP BY category;
+
+### Sum of quantities
+SELECT SUM(quantity) as total_quantity FROM items;
+
+### Average price
+SELECT AVG(price) as average_price FROM items;
+
+### Min and Max
+SELECT MIN(price) as cheapest, MAX(price) as most_expensive FROM items;
+
+### Group by with multiple aggregates
+SELECT 
+  category,
+  COUNT(*) as item_count,
+  AVG(price) as avg_price,
+  SUM(quantity) as total_quantity
+FROM items
+GROUP BY category;
+
+### Having clause
+SELECT category, AVG(price) as avg_price 
+FROM items 
+GROUP BY category 
+HAVING AVG(price) > 500;
+
+## Insert Queries
+
+### Insert single row
+INSERT INTO items (name, description, category, price, quantity)
+VALUES ('Laptop', 'Gaming laptop', 'Electronics', 1299.99, 5);
+
+### Get the last inserted ID
+SELECT LAST_INSERT_ID();
+
+### Insert multiple rows
+INSERT INTO items (name, category, price, quantity)
+VALUES 
+  ('Keyboard', 'Electronics', 79.99, 15),
+  ('Mouse', 'Electronics', 49.99, 20),
+  ('Monitor', 'Electronics', 299.99, 8);
+
+### Insert with default values
+INSERT INTO items (name, price)
+VALUES ('Headphones', 149.99);
+
+### Insert ignore (skip duplicates)
+INSERT IGNORE INTO items (name, price)
+VALUES ('Laptop', 1299.99);
+
+## Update Queries
+
+### Update single record
+UPDATE items 
+SET price = 1399.99, updated_at = CURRENT_TIMESTAMP
+WHERE id = 1;
+
+### Update multiple records
+UPDATE items 
+SET price = price * 1.1
+WHERE category = 'Electronics';
+
+### Update with calculation
+UPDATE items 
+SET quantity = quantity + 10
+WHERE quantity < 5;
+
+### Conditional update (CASE)
+UPDATE items 
+SET price = CASE
+  WHEN quantity > 50 THEN price * 0.9
+  WHEN quantity > 20 THEN price * 0.95
+  ELSE price
+END;
+
+## Delete Queries
+
+### Delete by ID
+DELETE FROM items WHERE id = 1;
+
+### Delete by condition
+DELETE FROM items WHERE price < 10;
+
+### Delete all (use with caution!)
+DELETE FROM items;
+
+### Truncate table (faster, resets AUTO_INCREMENT)
+TRUNCATE TABLE items;
+
+### Delete with subquery
+DELETE FROM items 
+WHERE category IN (
+  SELECT category FROM (
+    SELECT category FROM items 
+    GROUP BY category 
+    HAVING COUNT(*) < 2
+  ) AS tmp
+);
+
+## Joins (for when you expand the schema)
+
+### Inner join
+SELECT items.*, orders.order_date
+FROM items
+INNER JOIN orders ON items.id = orders.item_id;
+
+### Left join
+SELECT items.*, orders.order_date
+FROM items
+LEFT JOIN orders ON items.id = orders.item_id;
+
+### Self join
+SELECT a.name, b.name as similar_item
+FROM items a
+INNER JOIN items b ON a.category = b.category AND a.id != b.id;
+
+## Subqueries
+
+### Subquery in WHERE
+SELECT * FROM items 
+WHERE price > (SELECT AVG(price) FROM items);
+
+### Subquery in SELECT
+SELECT 
+  name,
+  price,
+  (SELECT AVG(price) FROM items) as avg_price,
+  price - (SELECT AVG(price) FROM items) as price_diff
+FROM items;
+
+### Subquery in FROM (derived table)
+SELECT category, avg_price 
+FROM (
+  SELECT category, AVG(price) as avg_price 
+  FROM items 
+  GROUP BY category
+) as category_averages
+WHERE avg_price > 100;
+
+## Advanced MySQL Features
+
+### Common Table Expressions (MySQL 8.0+)
+WITH expensive_items AS (
+  SELECT * FROM items WHERE price > 1000
+)
+SELECT category, COUNT(*) as count
+FROM expensive_items
+GROUP BY category;
+
+### Recursive CTE (MySQL 8.0+)
+WITH RECURSIVE item_tree AS (
+  SELECT id, name, 0 as level FROM items WHERE parent_id IS NULL
+  UNION ALL
+  SELECT i.id, i.name, it.level + 1
+  FROM items i
+  INNER JOIN item_tree it ON i.parent_id = it.id
+)
+SELECT * FROM item_tree;
+
+### Window Functions (MySQL 8.0+)
+
+#### Row number
+SELECT 
+  name,
+  price,
+  ROW_NUMBER() OVER (ORDER BY price DESC) as row_num
+FROM items;
+
+#### Rank within category
+SELECT 
+  name,
+  category,
+  price,
+  RANK() OVER (PARTITION BY category ORDER BY price DESC) as price_rank
+FROM items;
+
+#### Running total
+SELECT 
+  name,
+  price,
+  SUM(price) OVER (ORDER BY created_at) as running_total
+FROM items;
+
+#### Moving average (3 rows)
+SELECT 
+  name,
+  price,
+  AVG(price) OVER (
+    ORDER BY created_at 
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+  ) as moving_avg
+FROM items;
+
+### JSON Queries (MySQL 5.7+)
+
+#### Add JSON column
+ALTER TABLE items ADD COLUMN metadata JSON;
+
+#### Insert with JSON
+INSERT INTO items (name, price, metadata)
+VALUES ('Laptop', 1299.99, '{"brand": "Dell", "ram": "16GB", "storage": "512GB SSD"}');
+
+#### Query JSON field
+SELECT * FROM items WHERE JSON_EXTRACT(metadata, '$.brand') = 'Dell';
+
+#### Shorthand JSON query
+SELECT * FROM items WHERE metadata->'$.brand' = '"Dell"';
+
+#### Extract JSON value (unquoted)
+SELECT name, JSON_UNQUOTE(metadata->'$.brand') as brand FROM items;
+
+#### JSON contains
+SELECT * FROM items WHERE JSON_CONTAINS(metadata, '"Dell"', '$.brand');
+
+#### JSON search
+SELECT * FROM items WHERE JSON_SEARCH(metadata, 'one', 'Dell') IS NOT NULL;
+
+### Full-Text Search
+
+#### Add FULLTEXT index
+ALTER TABLE items ADD FULLTEXT INDEX ft_items(name, description);
+
+#### Natural language search
+SELECT * FROM items 
+WHERE MATCH(name, description) AGAINST('laptop gaming' IN NATURAL LANGUAGE MODE);
+
+#### Boolean mode search
+SELECT * FROM items 
+WHERE MATCH(name, description) AGAINST('+laptop -cheap' IN BOOLEAN MODE);
+
+#### With relevance score
+SELECT 
+  name,
+  MATCH(name, description) AGAINST('laptop') as relevance
+FROM items
+WHERE MATCH(name, description) AGAINST('laptop')
+ORDER BY relevance DESC;
+
+## Transactions
+
+### Basic transaction
+START TRANSACTION;
+UPDATE items SET quantity = quantity - 1 WHERE id = 1;
+INSERT INTO orders (item_id) VALUES (1);
+COMMIT;
+
+### Transaction with rollback
+START TRANSACTION;
+UPDATE items SET price = 0 WHERE id = 1;
+-- Oh no, mistake!
+ROLLBACK;
+
+### Savepoints
+START TRANSACTION;
+UPDATE items SET quantity = quantity - 1 WHERE id = 1;
+SAVEPOINT sp1;
+UPDATE items SET quantity = quantity - 1 WHERE id = 2;
+-- Oops, rollback last update only
+ROLLBACK TO SAVEPOINT sp1;
+COMMIT;
+
+## Indexes
+
+### Create index
+CREATE INDEX idx_items_price ON items(price);
+
+### Create unique index
+CREATE UNIQUE INDEX idx_items_unique_name ON items(name);
+
+### Create composite index
+CREATE INDEX idx_items_cat_price ON items(category, price);
+
+### Create FULLTEXT index
+ALTER TABLE items ADD FULLTEXT INDEX ft_name(name);
+
+### Show indexes
+SHOW INDEX FROM items;
+
+### Drop index
+DROP INDEX idx_items_price ON items;
+
+## Constraints
+
+### Add NOT NULL constraint
+ALTER TABLE items MODIFY name VARCHAR(255) NOT NULL;
+
+### Add CHECK constraint (MySQL 8.0.16+)
+ALTER TABLE items ADD CONSTRAINT price_positive CHECK (price >= 0);
+
+### Add UNIQUE constraint
+ALTER TABLE items ADD CONSTRAINT unique_name UNIQUE (name);
+
+### Add DEFAULT
+ALTER TABLE items ALTER quantity SET DEFAULT 0;
+
+### Add Foreign Key
+ALTER TABLE orders ADD CONSTRAINT fk_item
+  FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE;
+
+## Views
+
+### Create view
+CREATE VIEW expensive_items AS
+SELECT * FROM items WHERE price > 1000;
+
+### Query view
+SELECT * FROM expensive_items;
+
+### Drop view
+DROP VIEW IF EXISTS expensive_items;
+
+## Stored Procedures
+
+### Create procedure
+DELIMITER //
+CREATE PROCEDURE GetItemsByCategory(IN cat VARCHAR(100))
+BEGIN
+  SELECT * FROM items WHERE category = cat ORDER BY price DESC;
+END //
+DELIMITER ;
+
+### Call procedure
+CALL GetItemsByCategory('Electronics');
+
+### Drop procedure
+DROP PROCEDURE IF EXISTS GetItemsByCategory;
+
+## MySQL-Specific Functions
+
+### String functions
+SELECT CONCAT(name, ' - ', category) as full_name FROM items;
+SELECT UPPER(name) FROM items;
+SELECT LOWER(name) FROM items;
+SELECT LENGTH(name) FROM items;
+SELECT SUBSTRING(name, 1, 10) FROM items;
+SELECT REPLACE(name, 'old', 'new') FROM items;
+SELECT TRIM(name) FROM items;
+
+### Date functions
+SELECT NOW();
+SELECT CURDATE();
+SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') FROM items;
+SELECT DATEDIFF(NOW(), created_at) as days_ago FROM items;
+SELECT DATE_ADD(created_at, INTERVAL 30 DAY) as future_date FROM items;
+SELECT YEAR(created_at), MONTH(created_at) FROM items;
+
+### Numeric functions
+SELECT ROUND(price, 2) FROM items;
+SELECT CEIL(price) FROM items;
+SELECT FLOOR(price) FROM items;
+SELECT ABS(price) FROM items;
+SELECT FORMAT(price, 2) FROM items;
+
+### Conditional functions
+SELECT name, IF(price > 100, 'Expensive', 'Affordable') as category FROM items;
+SELECT name, IFNULL(description, 'No description') FROM items;
+SELECT name, COALESCE(description, category, 'N/A') FROM items;
+
+## Database Management
+
+### Show table size
+SELECT 
+  table_name AS 'Table',
+  ROUND(data_length / 1024 / 1024, 2) AS 'Data (MB)',
+  ROUND(index_length / 1024 / 1024, 2) AS 'Index (MB)',
+  ROUND((data_length + index_length) / 1024 / 1024, 2) AS 'Total (MB)'
+FROM information_schema.tables
+WHERE table_schema = 'learning_db';
+
+### Show current connections
+SHOW PROCESSLIST;
+
+### Show server variables
+SHOW VARIABLES LIKE 'max_connections';
+SHOW VARIABLES LIKE 'innodb_buffer_pool_size';
+
+### Show server status
+SHOW STATUS LIKE 'Threads%';
+SHOW STATUS LIKE 'Queries';
+
+### Reset AUTO_INCREMENT
+ALTER TABLE items AUTO_INCREMENT = 1;
+
+## Performance Analysis
+
+### Explain query
+EXPLAIN SELECT * FROM items WHERE category = 'Electronics';
+
+### Explain with format
+EXPLAIN FORMAT=JSON SELECT * FROM items WHERE price > 1000;
+
+### Analyze table
+ANALYZE TABLE items;
+
+### Optimize table (reclaim space)
+OPTIMIZE TABLE items;
+
+### Show slow queries
+SHOW VARIABLES LIKE 'slow_query_log';
+SET GLOBAL slow_query_log = 'ON';
+SET GLOBAL long_query_time = 1;
+
+## Backup and Restore
+
+### Export database (command line)
+mysqldump -u root -p learning_db > backup.sql
+
+### Import database (command line)
+mysql -u root -p learning_db < backup.sql
+
+### Export specific table
+mysqldump -u root -p learning_db items > items_backup.sql
+
+### Export with compression
+mysqldump -u root -p learning_db | gzip > backup.sql.gz
+
+### Export data as CSV
+SELECT * FROM items
+INTO OUTFILE '/tmp/items.csv'
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n';
+
+### Import from CSV
+LOAD DATA INFILE '/tmp/items.csv'
+INTO TABLE items
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n';
+
+## User Management
+
+### Create user
+CREATE USER 'appuser'@'localhost' IDENTIFIED BY 'password';
+
+### Grant privileges
+GRANT ALL PRIVILEGES ON learning_db.* TO 'appuser'@'localhost';
+FLUSH PRIVILEGES;
+
+### Show grants
+SHOW GRANTS FOR 'appuser'@'localhost';
+
+### Revoke privileges
+REVOKE ALL PRIVILEGES ON learning_db.* FROM 'appuser'@'localhost';
+
+### Drop user
+DROP USER 'appuser'@'localhost';
