@@ -1,0 +1,816 @@
+# MySQL Query Examples - 150+ Queries
+
+## Basic Queries
+
+### Select all items
+SELECT * FROM items;
+
+### Select specific columns
+SELECT id, name, price FROM items;
+
+### Select with condition
+SELECT * FROM items WHERE category = 'Electronics';
+
+### Select with multiple conditions
+SELECT * FROM items WHERE category = 'Electronics' AND price > 1000;
+
+### Select with OR condition
+SELECT * FROM items WHERE category = 'Electronics' OR category = 'Books';
+
+### Select with BETWEEN
+SELECT * FROM items WHERE price BETWEEN 100 AND 500;
+
+### Select with IN
+SELECT * FROM items WHERE category IN ('Electronics', 'Books', 'Clothing');
+
+### Select with NULL check
+SELECT * FROM items WHERE description IS NOT NULL;
+
+### Select with NOT NULL
+SELECT * FROM items WHERE description IS NULL;
+
+### Select DISTINCT values
+SELECT DISTINCT category FROM items;
+
+## Pattern Matching
+
+### Case-insensitive LIKE (MySQL LIKE is case-insensitive by default)
+SELECT * FROM items WHERE name LIKE '%laptop%';
+
+### Starts with
+SELECT * FROM items WHERE name LIKE 'gaming%';
+
+### Ends with
+SELECT * FROM items WHERE name LIKE '%pro';
+
+### Contains pattern
+SELECT * FROM items WHERE description LIKE '%warranty%';
+
+### Multiple wildcards
+SELECT * FROM items WHERE name LIKE '%a_e%';
+
+### NOT LIKE
+SELECT * FROM items WHERE name NOT LIKE '%old%';
+
+### REGEXP pattern matching
+SELECT * FROM items WHERE name REGEXP '^[A-Z]';
+
+### REGEXP case-insensitive
+SELECT * FROM items WHERE name REGEXP '(?i)laptop';
+
+## Sorting
+
+### Sort ascending
+SELECT * FROM items ORDER BY price ASC;
+
+### Sort descending
+SELECT * FROM items ORDER BY price DESC;
+
+### Multiple sort columns
+SELECT * FROM items ORDER BY category, price DESC;
+
+### Sort by date
+SELECT * FROM items ORDER BY created_at DESC;
+
+### Sort with NULL values last
+SELECT * FROM items ORDER BY description IS NULL, description;
+
+### Natural sorting
+SELECT * FROM items ORDER BY CAST(name AS UNSIGNED), name;
+
+## Limiting Results
+
+### Limit rows
+SELECT * FROM items LIMIT 10;
+
+### Skip and limit (pagination)
+SELECT * FROM items LIMIT 10 OFFSET 20;
+
+### Alternative pagination syntax
+SELECT * FROM items LIMIT 20, 10;
+
+### Top 5 most expensive
+SELECT * FROM items ORDER BY price DESC LIMIT 5;
+
+### Random selection
+SELECT * FROM items ORDER BY RAND() LIMIT 5;
+
+## Aggregate Functions
+
+### Count all items
+SELECT COUNT(*) FROM items;
+
+### Count non-null values
+SELECT COUNT(description) FROM items;
+
+### Count distinct categories
+SELECT COUNT(DISTINCT category) FROM items;
+
+### Count by category
+SELECT category, COUNT(*) as count FROM items GROUP BY category;
+
+### Sum of quantities
+SELECT SUM(quantity) as total_quantity FROM items;
+
+### Average price
+SELECT AVG(price) as average_price FROM items;
+
+### Min and Max
+SELECT MIN(price) as cheapest, MAX(price) as most_expensive FROM items;
+
+### Standard deviation
+SELECT STDDEV(price) as price_stddev FROM items;
+
+### Variance
+SELECT VARIANCE(price) as price_variance FROM items;
+
+### Group by with multiple aggregates
+SELECT 
+  category,
+  COUNT(*) as item_count,
+  AVG(price) as avg_price,
+  SUM(quantity) as total_quantity,
+  MIN(price) as min_price,
+  MAX(price) as max_price
+FROM items
+GROUP BY category;
+
+### Having clause
+SELECT category, AVG(price) as avg_price 
+FROM items 
+GROUP BY category 
+HAVING AVG(price) > 100;
+
+### Having with COUNT
+SELECT category, COUNT(*) as item_count
+FROM items
+GROUP BY category
+HAVING COUNT(*) >= 5;
+
+### Group by with ROLLUP
+SELECT category, SUM(quantity) as total
+FROM items
+GROUP BY category WITH ROLLUP;
+
+## String Functions
+
+### Concatenate strings
+SELECT CONCAT(name, ' - ', category) as full_name FROM items;
+
+### Concatenate with separator
+SELECT CONCAT_WS(' | ', name, category, price) as item_info FROM items;
+
+### Uppercase
+SELECT UPPER(name) as name_upper FROM items;
+
+### Lowercase
+SELECT LOWER(name) as name_lower FROM items;
+
+### Substring
+SELECT SUBSTR(name, 1, 10) as short_name FROM items;
+
+### String length
+SELECT name, LENGTH(name) as name_length FROM items;
+
+### Trim whitespace
+SELECT TRIM(name) as trimmed_name FROM items;
+
+### Left/Right substring
+SELECT LEFT(name, 5) as first_5, RIGHT(name, 5) as last_5 FROM items;
+
+### Replace text
+SELECT REPLACE(name, 'Pro', 'Professional') as new_name FROM items;
+
+### Locate substring position
+SELECT name, LOCATE('Pro', name) as pro_position FROM items;
+
+### Reverse string
+SELECT REVERSE(name) as reversed FROM items;
+
+### Repeat string
+SELECT REPEAT('*', 5) as stars;
+
+### String padding
+SELECT LPAD(id, 5, '0') as padded_id FROM items;
+
+## Numeric Functions
+
+### Round numbers
+SELECT name, ROUND(price, 0) as rounded_price FROM items;
+
+### Ceiling and Floor
+SELECT price, CEIL(price) as ceiling, FLOOR(price) as floor FROM items;
+
+### Absolute value
+SELECT price, ABS(price - 100) as diff_from_100 FROM items;
+
+### Power and Square root
+SELECT price, POW(price, 2) as squared, SQRT(price) as square_root FROM items;
+
+### Modulo
+SELECT id, id % 2 as is_odd FROM items;
+
+### Random number
+SELECT RAND() as random_number;
+
+### Truncate decimals
+SELECT price, TRUNCATE(price, 1) as truncated FROM items;
+
+### Sign function
+SELECT price, SIGN(price - 500) as comparison FROM items;
+
+## Date and Time Functions
+
+### Current date and time
+SELECT NOW() as current_datetime;
+
+### Current date
+SELECT CURDATE() as current_date;
+
+### Current time
+SELECT CURTIME() as current_time;
+
+### Date formatting
+SELECT DATE_FORMAT(created_at, '%Y-%m-%d') as formatted_date FROM items;
+
+### Date formatting with time
+SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as formatted FROM items;
+
+### Extract year, month, day
+SELECT 
+  YEAR(created_at) as year,
+  MONTH(created_at) as month,
+  DAY(created_at) as day
+FROM items;
+
+### Day of week
+SELECT DAYNAME(created_at) as day_name FROM items;
+
+### Week of year
+SELECT WEEK(created_at) as week_number FROM items;
+
+### Date arithmetic
+SELECT DATE_ADD(created_at, INTERVAL 7 DAY) as next_week FROM items;
+
+### Date difference
+SELECT DATEDIFF(NOW(), created_at) as days_old FROM items;
+
+### Time difference
+SELECT TIMEDIFF(NOW(), created_at) as time_diff FROM items;
+
+### Last day of month
+SELECT LAST_DAY(created_at) as month_end FROM items;
+
+### Unix timestamp
+SELECT UNIX_TIMESTAMP(created_at) as timestamp FROM items;
+
+### From Unix timestamp
+SELECT FROM_UNIXTIME(1234567890) as datetime_value;
+
+## Conditional Logic
+
+### Simple CASE statement
+SELECT 
+  name,
+  CASE 
+    WHEN price < 100 THEN 'Cheap'
+    WHEN price < 500 THEN 'Moderate'
+    ELSE 'Expensive'
+  END as price_category
+FROM items;
+
+### CASE with multiple conditions
+SELECT 
+  name,
+  CASE 
+    WHEN quantity = 0 THEN 'Out of Stock'
+    WHEN quantity < 10 THEN 'Low Stock'
+    ELSE 'In Stock'
+  END as stock_status
+FROM items;
+
+### IF function
+SELECT name, IF(price > 500, 'High', 'Low') as price_level FROM items;
+
+### IFNULL
+SELECT name, IFNULL(description, 'No description') as desc FROM items;
+
+### COALESCE
+SELECT name, COALESCE(description, category, 'N/A') as info FROM items;
+
+### NULLIF
+SELECT NULLIF(quantity, 0) as non_zero_qty FROM items;
+
+## Joins (Self-referencing for demonstration)
+
+### Self join to compare items
+SELECT 
+  a.name as item1,
+  b.name as item2,
+  a.price as price1,
+  b.price as price2
+FROM items a
+CROSS JOIN items b
+WHERE a.id < b.id AND a.category = b.category
+LIMIT 10;
+
+### Find items with same category
+SELECT 
+  i1.name,
+  i2.name as related_item,
+  i1.category
+FROM items i1
+INNER JOIN items i2 ON i1.category = i2.category AND i1.id != i2.id
+LIMIT 20;
+
+## Subqueries
+
+### Items more expensive than average
+SELECT * FROM items 
+WHERE price > (SELECT AVG(price) FROM items);
+
+### Items in most common category
+SELECT * FROM items
+WHERE category = (
+  SELECT category 
+  FROM items 
+  GROUP BY category 
+  ORDER BY COUNT(*) DESC 
+  LIMIT 1
+);
+
+### Correlated subquery
+SELECT name, price,
+  (SELECT AVG(price) FROM items i2 WHERE i2.category = i1.category) as cat_avg
+FROM items i1;
+
+### EXISTS subquery
+SELECT * FROM items i1
+WHERE EXISTS (
+  SELECT 1 FROM items i2 
+  WHERE i2.category = i1.category AND i2.id != i1.id
+);
+
+### IN subquery
+SELECT * FROM items
+WHERE category IN (
+  SELECT DISTINCT category FROM items WHERE price > 500
+);
+
+### NOT IN subquery
+SELECT * FROM items
+WHERE id NOT IN (SELECT id FROM items WHERE quantity = 0);
+
+## Window Functions (MySQL 8.0+)
+
+### Row number
+SELECT 
+  name, 
+  price,
+  ROW_NUMBER() OVER (ORDER BY price DESC) as row_num
+FROM items;
+
+### Rank with gaps
+SELECT 
+  name, 
+  price,
+  RANK() OVER (ORDER BY price DESC) as rank
+FROM items;
+
+### Dense rank without gaps
+SELECT 
+  name, 
+  price,
+  DENSE_RANK() OVER (ORDER BY price DESC) as dense_rank
+FROM items;
+
+### Running total
+SELECT 
+  name, 
+  price,
+  SUM(price) OVER (ORDER BY id) as running_total
+FROM items;
+
+### Partition by category
+SELECT 
+  category,
+  name, 
+  price,
+  AVG(price) OVER (PARTITION BY category) as category_avg
+FROM items;
+
+### Lead and Lag
+SELECT 
+  name, 
+  price,
+  LAG(price) OVER (ORDER BY id) as prev_price,
+  LEAD(price) OVER (ORDER BY id) as next_price
+FROM items;
+
+### First and Last value
+SELECT 
+  category,
+  name, 
+  price,
+  FIRST_VALUE(price) OVER (PARTITION BY category ORDER BY price) as cheapest,
+  LAST_VALUE(price) OVER (PARTITION BY category ORDER BY price ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) as most_expensive
+FROM items;
+
+## Advanced Queries
+
+### Union of results
+SELECT name, 'Expensive' as tag FROM items WHERE price > 1000
+UNION
+SELECT name, 'Cheap' as tag FROM items WHERE price < 100;
+
+### Union all (with duplicates)
+SELECT category FROM items WHERE price > 500
+UNION ALL
+SELECT category FROM items WHERE quantity > 50;
+
+### Intersect simulation
+SELECT DISTINCT category FROM items WHERE price > 500
+AND category IN (SELECT category FROM items WHERE quantity > 50);
+
+### Pivot-like query
+SELECT 
+  category,
+  SUM(CASE WHEN price < 100 THEN 1 ELSE 0 END) as cheap_count,
+  SUM(CASE WHEN price BETWEEN 100 AND 500 THEN 1 ELSE 0 END) as medium_count,
+  SUM(CASE WHEN price > 500 THEN 1 ELSE 0 END) as expensive_count
+FROM items
+GROUP BY category;
+
+### Cumulative percentage
+SELECT 
+  name,
+  price,
+  SUM(price) OVER (ORDER BY price) / (SELECT SUM(price) FROM items) * 100 as cumulative_pct
+FROM items;
+
+## JSON Functions (MySQL 5.7+)
+
+### Create JSON object
+SELECT JSON_OBJECT('id', id, 'name', name, 'price', price) as json_data FROM items LIMIT 5;
+
+### JSON array
+SELECT JSON_ARRAY(id, name, price) as json_array FROM items LIMIT 5;
+
+### Extract JSON value
+SELECT name, JSON_EXTRACT('{"status": "active"}', '$.status') as status FROM items LIMIT 1;
+
+### JSON search in column (if you have JSON column)
+-- SELECT * FROM items WHERE JSON_EXTRACT(metadata, '$.featured') = true;
+
+## Fulltext Search
+
+### Create fulltext index (already in schema)
+-- ALTER TABLE items ADD FULLTEXT INDEX idx_fulltext (name, description);
+
+### Fulltext search
+SELECT * FROM items 
+WHERE MATCH(name, description) AGAINST('laptop' IN NATURAL LANGUAGE MODE);
+
+### Boolean fulltext search
+SELECT * FROM items 
+WHERE MATCH(name, description) AGAINST('+gaming -old' IN BOOLEAN MODE);
+
+### Fulltext with relevance score
+SELECT *, MATCH(name, description) AGAINST('laptop') as relevance
+FROM items 
+WHERE MATCH(name, description) AGAINST('laptop')
+ORDER BY relevance DESC;
+
+## Transactions
+
+### Begin transaction
+START TRANSACTION;
+
+### Insert with transaction
+START TRANSACTION;
+INSERT INTO items (name, category, price, quantity) VALUES ('Test Item', 'Test', 10.00, 5);
+COMMIT;
+
+### Rollback transaction
+START TRANSACTION;
+DELETE FROM items WHERE id = 999;
+ROLLBACK;
+
+### Savepoint
+START TRANSACTION;
+INSERT INTO items (name, price) VALUES ('Item 1', 100);
+SAVEPOINT sp1;
+INSERT INTO items (name, price) VALUES ('Item 2', 200);
+ROLLBACK TO SAVEPOINT sp1;
+COMMIT;
+
+## Database Management
+
+### Show all tables
+SHOW TABLES;
+
+### Describe table structure
+DESCRIBE items;
+
+### Show create table statement
+SHOW CREATE TABLE items;
+
+### Show indexes
+SHOW INDEXES FROM items;
+
+### Show table status
+SHOW TABLE STATUS LIKE 'items';
+
+### Analyze table
+ANALYZE TABLE items;
+
+### Optimize table
+OPTIMIZE TABLE items;
+
+### Check table
+CHECK TABLE items;
+
+### Repair table
+REPAIR TABLE items;
+
+## Stored Procedures
+
+### Create simple procedure
+DELIMITER //
+CREATE PROCEDURE GetExpensiveItems(IN min_price DECIMAL(10,2))
+BEGIN
+  SELECT * FROM items WHERE price >= min_price ORDER BY price DESC;
+END //
+DELIMITER ;
+
+### Call procedure
+CALL GetExpensiveItems(500);
+
+### Create procedure with OUT parameter
+DELIMITER //
+CREATE PROCEDURE GetItemCount(OUT item_count INT)
+BEGIN
+  SELECT COUNT(*) INTO item_count FROM items;
+END //
+DELIMITER ;
+
+### Call with OUT parameter
+CALL GetItemCount(@count);
+SELECT @count;
+
+### Drop procedure
+DROP PROCEDURE IF EXISTS GetExpensiveItems;
+
+## Functions
+
+### Create function
+DELIMITER //
+CREATE FUNCTION GetPriceCategory(price DECIMAL(10,2))
+RETURNS VARCHAR(20)
+DETERMINISTIC
+BEGIN
+  IF price < 100 THEN
+    RETURN 'Cheap';
+  ELSEIF price < 500 THEN
+    RETURN 'Moderate';
+  ELSE
+    RETURN 'Expensive';
+  END IF;
+END //
+DELIMITER ;
+
+### Use function
+SELECT name, price, GetPriceCategory(price) as category FROM items;
+
+### Drop function
+DROP FUNCTION IF EXISTS GetPriceCategory;
+
+## Triggers
+
+### Create BEFORE INSERT trigger
+DELIMITER //
+CREATE TRIGGER before_item_insert
+BEFORE INSERT ON items
+FOR EACH ROW
+BEGIN
+  IF NEW.price < 0 THEN
+    SET NEW.price = 0;
+  END IF;
+END //
+DELIMITER ;
+
+### Create AFTER UPDATE trigger
+DELIMITER //
+CREATE TRIGGER after_item_update
+AFTER UPDATE ON items
+FOR EACH ROW
+BEGIN
+  -- Log changes (you'd need a separate log table)
+  -- INSERT INTO item_logs (item_id, action, timestamp) VALUES (NEW.id, 'UPDATE', NOW());
+  SET @last_updated_id = NEW.id;
+END //
+DELIMITER ;
+
+### Show triggers
+SHOW TRIGGERS;
+
+### Drop trigger
+DROP TRIGGER IF EXISTS before_item_insert;
+
+## Views
+
+### Create view
+CREATE VIEW expensive_items AS
+SELECT id, name, category, price
+FROM items
+WHERE price > 500;
+
+### Query view
+SELECT * FROM expensive_items;
+
+### Create view with join
+CREATE VIEW category_summary AS
+SELECT 
+  category,
+  COUNT(*) as item_count,
+  AVG(price) as avg_price,
+  SUM(quantity) as total_quantity
+FROM items
+GROUP BY category;
+
+### Updatable view
+CREATE VIEW low_stock_items AS
+SELECT id, name, quantity
+FROM items
+WHERE quantity < 10
+WITH CHECK OPTION;
+
+### Drop view
+DROP VIEW IF EXISTS expensive_items;
+
+## Performance Optimization
+
+### Use index hints
+SELECT * FROM items USE INDEX (idx_items_category) WHERE category = 'Electronics';
+
+### Force index
+SELECT * FROM items FORCE INDEX (idx_items_name) WHERE name LIKE 'A%';
+
+### Ignore index
+SELECT * FROM items IGNORE INDEX (idx_items_category) WHERE category = 'Books';
+
+### Explain query
+EXPLAIN SELECT * FROM items WHERE category = 'Electronics' AND price > 500;
+
+### Explain extended
+EXPLAIN FORMAT=JSON SELECT * FROM items WHERE category = 'Electronics';
+
+### Show warnings after explain
+EXPLAIN SELECT * FROM items WHERE category = 'Electronics';
+SHOW WARNINGS;
+
+### Query profiling
+SET profiling = 1;
+SELECT * FROM items WHERE price > 500;
+SHOW PROFILES;
+SHOW PROFILE FOR QUERY 1;
+SET profiling = 0;
+
+## Security and User Management
+
+### Show current user
+SELECT USER(), CURRENT_USER();
+
+### Show privileges
+SHOW GRANTS;
+
+### Show all users (requires privileges)
+-- SELECT User, Host FROM mysql.user;
+
+## Backup and Export
+
+### Export to CSV (requires FILE privilege)
+-- SELECT * FROM items INTO OUTFILE '/tmp/items.csv'
+-- FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+-- LINES TERMINATED BY '\n';
+
+### Export with headers
+-- SELECT 'id', 'name', 'category', 'price', 'quantity'
+-- UNION ALL
+-- SELECT id, name, category, price, quantity FROM items
+-- INTO OUTFILE '/tmp/items_with_headers.csv'
+-- FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+-- LINES TERMINATED BY '\n';
+
+## Advanced String Search
+
+### Find duplicates
+SELECT name, COUNT(*) as count
+FROM items
+GROUP BY name
+HAVING COUNT(*) > 1;
+
+### Soundex matching (similar sounding names)
+SELECT * FROM items 
+WHERE SOUNDEX(name) = SOUNDEX('laptop');
+
+### String comparison
+SELECT name, 
+  STRCMP(name, 'Laptop') as comparison
+FROM items
+LIMIT 5;
+
+## Mathematical Queries
+
+### Calculate total value
+SELECT 
+  SUM(price * quantity) as total_inventory_value,
+  AVG(price * quantity) as avg_item_value
+FROM items;
+
+### Percentage calculations
+SELECT 
+  category,
+  COUNT(*) as count,
+  COUNT(*) * 100.0 / (SELECT COUNT(*) FROM items) as percentage
+FROM items
+GROUP BY category;
+
+### Binning prices
+SELECT 
+  FLOOR(price / 100) * 100 as price_range,
+  COUNT(*) as count
+FROM items
+GROUP BY FLOOR(price / 100)
+ORDER BY price_range;
+
+## Complex Aggregations
+
+### Multiple grouping sets
+SELECT category, 
+  COUNT(*) as total,
+  COUNT(CASE WHEN price < 100 THEN 1 END) as cheap,
+  COUNT(CASE WHEN price >= 100 AND price < 500 THEN 1 END) as medium,
+  COUNT(CASE WHEN price >= 500 THEN 1 END) as expensive
+FROM items
+GROUP BY category;
+
+### Conditional aggregation
+SELECT 
+  AVG(CASE WHEN category = 'Electronics' THEN price END) as avg_electronics,
+  AVG(CASE WHEN category = 'Books' THEN price END) as avg_books,
+  AVG(CASE WHEN category = 'Clothing' THEN price END) as avg_clothing
+FROM items;
+
+## Data Modification
+
+### Batch update
+UPDATE items SET price = price * 1.1 WHERE category = 'Electronics';
+
+### Conditional update
+UPDATE items 
+SET quantity = CASE 
+  WHEN quantity < 10 THEN quantity + 10
+  ELSE quantity
+END;
+
+### Update with join
+UPDATE items i1
+JOIN (SELECT category, AVG(price) as avg_price FROM items GROUP BY category) i2
+ON i1.category = i2.category
+SET i1.price = i2.avg_price
+WHERE i1.price IS NULL;
+
+### Insert ignore (skip duplicates)
+INSERT IGNORE INTO items (name, category, price) VALUES ('Test', 'Test', 10);
+
+### Insert on duplicate key update
+INSERT INTO items (id, name, price) VALUES (1, 'Updated Name', 100)
+ON DUPLICATE KEY UPDATE name = VALUES(name), price = VALUES(price);
+
+### Replace (delete and insert)
+REPLACE INTO items (id, name, category, price) VALUES (1, 'New Item', 'Test', 50);
+
+### Multi-row insert
+INSERT INTO items (name, category, price, quantity) VALUES
+  ('Item 1', 'Category A', 10.00, 5),
+  ('Item 2', 'Category B', 20.00, 10),
+  ('Item 3', 'Category C', 30.00, 15);
+
+### Delete with limit
+DELETE FROM items WHERE price < 10 ORDER BY created_at LIMIT 5;
+
+This collection includes 150+ MySQL queries covering:
+- Basic CRUD operations
+- Advanced querying techniques
+- String, numeric, and date functions
+- Window functions (MySQL 8.0+)
+- JSON support
+- Fulltext search
+- Stored procedures and functions
+- Triggers and views
+- Performance optimization
+- Transactions
+- Database management
+
+Practice these queries to master MySQL!

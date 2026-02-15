@@ -1,0 +1,580 @@
+# Redis Command Examples - 100+ Commands
+
+## Introduction to Redis
+
+Redis is an in-memory data structure store used as a database, cache, and message broker.
+Unlike SQL databases, Redis uses key-value pairs and various data structures.
+
+## Basic String Commands
+
+### SET - Store a key-value pair
+SET user:1:name "John Doe"
+SET product:100:price 29.99
+SET session:abc123 "active"
+
+### GET - Retrieve a value
+GET user:1:name
+GET product:100:price
+
+### MSET - Set multiple keys at once
+MSET user:1:name "John" user:1:email "john@example.com" user:1:age "30"
+
+### MGET - Get multiple values
+MGET user:1:name user:1:email user:1:age
+
+### SETNX - Set if not exists
+SETNX user:1:name "Jane"  # Returns 0 if key exists
+
+### SETEX - Set with expiration (seconds)
+SETEX session:abc123 3600 "active"  # Expires in 1 hour
+
+### PSETEX - Set with expiration (milliseconds)
+PSETEX cache:temp 5000 "temporary"  # Expires in 5 seconds
+
+### GETSET - Get old value and set new value
+GETSET counter:visits 0
+
+### APPEND - Append to existing value
+APPEND user:1:name " Smith"
+
+### STRLEN - Get length of value
+STRLEN user:1:name
+
+### GETRANGE - Get substring
+GETRANGE user:1:name 0 4  # Get first 5 characters
+
+### SETRANGE - Replace part of string
+SETRANGE user:1:name 0 "Jane"
+
+### INCR - Increment integer value
+INCR counter:visits
+INCR product:100:views
+
+### INCRBY - Increment by specific amount
+INCRBY counter:visits 10
+
+### INCRBYFLOAT - Increment by float
+INCRBYFLOAT product:100:price 5.50
+
+### DECR - Decrement integer value
+DECR counter:stock
+
+### DECRBY - Decrement by specific amount
+DECRBY counter:stock 5
+
+## Hash Commands (Used for Items in This Module)
+
+### HSET - Set field in hash
+HSET items:1 name "Laptop"
+HSET items:1 price 999.99
+HSET items:1 category "Electronics"
+
+### HMSET - Set multiple fields (deprecated, use HSET)
+HSET items:1 name "Laptop" price 999.99 category "Electronics"
+
+### HGET - Get field from hash
+HGET items:1 name
+HGET items:1 price
+
+### HMGET - Get multiple fields
+HMGET items:1 name price category
+
+### HGETALL - Get all fields and values
+HGETALL items:1
+
+### HEXISTS - Check if field exists
+HEXISTS items:1 name
+
+### HDEL - Delete field from hash
+HDEL items:1 description
+
+### HLEN - Get number of fields
+HLEN items:1
+
+### HKEYS - Get all field names
+HKEYS items:1
+
+### HVALS - Get all values
+HVALS items:1
+
+### HINCRBY - Increment integer field
+HINCRBY items:1 quantity 5
+
+### HINCRBYFLOAT - Increment float field
+HINCRBYFLOAT items:1 price 10.50
+
+### HSETNX - Set field if not exists
+HSETNX items:1 rating 5
+
+### HSTRLEN - Get length of field value
+HSTRLEN items:1 name
+
+### HSCAN - Iterate over hash fields
+HSCAN items:1 0 MATCH *name*
+
+## List Commands
+
+### LPUSH - Push to left (head) of list
+LPUSH queue:tasks "task1"
+LPUSH queue:tasks "task2"
+
+### RPUSH - Push to right (tail) of list
+RPUSH queue:tasks "task3"
+
+### LPOP - Remove and get first element
+LPOP queue:tasks
+
+### RPOP - Remove and get last element
+RPOP queue:tasks
+
+### LLEN - Get list length
+LLEN queue:tasks
+
+### LRANGE - Get range of elements
+LRANGE queue:tasks 0 -1  # Get all elements
+LRANGE queue:tasks 0 9   # Get first 10 elements
+
+### LINDEX - Get element by index
+LINDEX queue:tasks 0  # First element
+LINDEX queue:tasks -1 # Last element
+
+### LSET - Set element at index
+LSET queue:tasks 0 "updated_task"
+
+### LINSERT - Insert before or after element
+LINSERT queue:tasks BEFORE "task2" "task1.5"
+LINSERT queue:tasks AFTER "task2" "task2.5"
+
+### LREM - Remove elements
+LREM queue:tasks 1 "task1"  # Remove first occurrence
+LREM queue:tasks -1 "task1" # Remove last occurrence
+LREM queue:tasks 0 "task1"  # Remove all occurrences
+
+### LTRIM - Trim list to range
+LTRIM queue:tasks 0 99  # Keep only first 100 elements
+
+### RPOPLPUSH - Pop from one list, push to another
+RPOPLPUSH queue:tasks queue:processing
+
+### BLPOP - Blocking left pop (wait for element)
+BLPOP queue:tasks 10  # Wait up to 10 seconds
+
+### BRPOP - Blocking right pop
+BRPOP queue:tasks 10
+
+### BRPOPLPUSH - Blocking pop and push
+BRPOPLPUSH queue:tasks queue:processing 10
+
+## Set Commands
+
+### SADD - Add members to set
+SADD items:ids 1 2 3 4 5
+SADD tags:electronics "laptop" "phone" "tablet"
+
+### SMEMBERS - Get all members
+SMEMBERS items:ids
+SMEMBERS tags:electronics
+
+### SISMEMBER - Check if member exists
+SISMEMBER items:ids 1
+SISMEMBER tags:electronics "laptop"
+
+### SCARD - Get set cardinality (size)
+SCARD items:ids
+
+### SREM - Remove members
+SREM items:ids 3
+SREM tags:electronics "phone"
+
+### SPOP - Remove and return random member
+SPOP tags:electronics
+
+### SRANDMEMBER - Get random member (without removing)
+SRANDMEMBER tags:electronics
+SRANDMEMBER tags:electronics 2  # Get 2 random members
+
+### SMOVE - Move member between sets
+SMOVE tags:electronics tags:mobile "phone"
+
+### SUNION - Union of sets
+SUNION tags:electronics tags:mobile
+
+### SINTER - Intersection of sets
+SINTER tags:electronics tags:popular
+
+### SDIFF - Difference of sets
+SDIFF tags:all tags:electronics
+
+### SUNIONSTORE - Union and store result
+SUNIONSTORE tags:combined tags:electronics tags:mobile
+
+### SINTERSTORE - Intersection and store result
+SINTERSTORE tags:common tags:electronics tags:popular
+
+### SDIFFSTORE - Difference and store result
+SDIFFSTORE tags:unique tags:all tags:electronics
+
+### SSCAN - Iterate over set members
+SSCAN items:ids 0
+
+## Sorted Set Commands
+
+### ZADD - Add members with scores
+ZADD leaderboard 100 "player1"
+ZADD leaderboard 95 "player2" 110 "player3"
+
+### ZSCORE - Get score of member
+ZSCORE leaderboard "player1"
+
+### ZRANGE - Get members by rank (ascending)
+ZRANGE leaderboard 0 -1          # All members
+ZRANGE leaderboard 0 9           # Top 10
+ZRANGE leaderboard 0 -1 WITHSCORES  # With scores
+
+### ZREVRANGE - Get members by rank (descending)
+ZREVRANGE leaderboard 0 9 WITHSCORES  # Top 10 with scores
+
+### ZRANGEBYSCORE - Get members by score range
+ZRANGEBYSCORE leaderboard 90 100
+ZRANGEBYSCORE leaderboard -inf +inf  # All members
+
+### ZREVRANGEBYSCORE - Reverse score range
+ZREVRANGEBYSCORE leaderboard 100 90
+
+### ZRANK - Get rank of member (ascending)
+ZRANK leaderboard "player1"
+
+### ZREVRANK - Get rank of member (descending)
+ZREVRANK leaderboard "player1"
+
+### ZCARD - Get number of members
+ZCARD leaderboard
+
+### ZCOUNT - Count members in score range
+ZCOUNT leaderboard 90 100
+
+### ZINCRBY - Increment score
+ZINCRBY leaderboard 5 "player1"
+
+### ZREM - Remove members
+ZREM leaderboard "player2"
+
+### ZREMRANGEBYRANK - Remove by rank range
+ZREMRANGEBYRANK leaderboard 0 9  # Remove bottom 10
+
+### ZREMRANGEBYSCORE - Remove by score range
+ZREMRANGEBYSCORE leaderboard 0 50
+
+### ZPOPMIN - Remove and return lowest score member
+ZPOPMIN leaderboard
+
+### ZPOPMAX - Remove and return highest score member
+ZPOPMAX leaderboard
+
+### ZUNIONSTORE - Union of sorted sets
+ZUNIONSTORE combined 2 leaderboard1 leaderboard2
+
+### ZINTERSTORE - Intersection of sorted sets
+ZINTERSTORE common 2 leaderboard1 leaderboard2
+
+### ZSCAN - Iterate over sorted set
+ZSCAN leaderboard 0
+
+## Key Management Commands
+
+### EXISTS - Check if key exists
+EXISTS items:1
+EXISTS items:1 items:2 items:3  # Check multiple keys
+
+### DEL - Delete keys
+DEL items:1
+DEL items:1 items:2 items:3  # Delete multiple keys
+
+### UNLINK - Async delete (non-blocking)
+UNLINK items:1
+
+### TYPE - Get key type
+TYPE items:1      # Returns "hash"
+TYPE items:ids    # Returns "set"
+
+### KEYS - Find keys by pattern
+KEYS items:*      # All items
+KEYS user:*:name  # All user names
+KEYS *            # All keys (use carefully in production!)
+
+### SCAN - Iterate over keys (better than KEYS)
+SCAN 0 MATCH items:* COUNT 10
+
+### EXPIRE - Set expiration (seconds)
+EXPIRE session:abc123 3600  # Expire in 1 hour
+
+### EXPIREAT - Set expiration at Unix timestamp
+EXPIREAT session:abc123 1735689600
+
+### PEXPIRE - Set expiration (milliseconds)
+PEXPIRE cache:temp 5000  # Expire in 5 seconds
+
+### TTL - Get time to live (seconds)
+TTL session:abc123
+
+### PTTL - Get time to live (milliseconds)
+PTTL session:abc123
+
+### PERSIST - Remove expiration
+PERSIST session:abc123
+
+### RENAME - Rename key
+RENAME items:old items:new
+
+### RENAMENX - Rename if new key doesn't exist
+RENAMENX items:old items:new
+
+### RANDOMKEY - Get random key
+RANDOMKEY
+
+### DUMP - Serialize key value
+DUMP items:1
+
+### RESTORE - Restore serialized value
+RESTORE items:1 0 <serialized-value>
+
+## Transaction Commands
+
+### MULTI - Start transaction
+MULTI
+
+### EXEC - Execute transaction
+MULTI
+SET counter 0
+INCR counter
+INCR counter
+EXEC
+
+### DISCARD - Cancel transaction
+MULTI
+SET counter 0
+DISCARD
+
+### WATCH - Watch keys for changes
+WATCH items:1
+MULTI
+HINCRBY items:1 quantity 1
+EXEC
+
+### UNWATCH - Unwatch all keys
+UNWATCH
+
+## Pub/Sub Commands
+
+### PUBLISH - Publish message to channel
+PUBLISH notifications "New item added"
+PUBLISH updates:items '{"id":1,"action":"create"}'
+
+### SUBSCRIBE - Subscribe to channels
+SUBSCRIBE notifications
+SUBSCRIBE updates:items updates:users
+
+### PSUBSCRIBE - Subscribe to pattern
+PSUBSCRIBE updates:*
+
+### UNSUBSCRIBE - Unsubscribe from channels
+UNSUBSCRIBE notifications
+
+### PUNSUBSCRIBE - Unsubscribe from pattern
+PUNSUBSCRIBE updates:*
+
+### PUBSUB CHANNELS - List active channels
+PUBSUB CHANNELS
+
+### PUBSUB NUMSUB - Get subscriber count
+PUBSUB NUMSUB notifications
+
+### PUBSUB NUMPAT - Get pattern subscription count
+PUBSUB NUMPAT
+
+## Server Commands
+
+### PING - Test connection
+PING
+
+### ECHO - Echo message
+ECHO "Hello Redis"
+
+### SELECT - Select database
+SELECT 0
+SELECT 1
+
+### DBSIZE - Get number of keys
+DBSIZE
+
+### FLUSHDB - Delete all keys in current database
+FLUSHDB
+
+### FLUSHALL - Delete all keys in all databases
+FLUSHALL
+
+### INFO - Get server information
+INFO
+INFO memory
+INFO stats
+INFO replication
+
+### CONFIG GET - Get configuration
+CONFIG GET maxmemory
+CONFIG GET save
+
+### CONFIG SET - Set configuration
+CONFIG SET maxmemory 256mb
+
+### SAVE - Synchronous save
+SAVE
+
+### BGSAVE - Background save
+BGSAVE
+
+### LASTSAVE - Get last save time
+LASTSAVE
+
+### SHUTDOWN - Shutdown server
+SHUTDOWN SAVE
+
+### TIME - Get server time
+TIME
+
+### CLIENT LIST - List connected clients
+CLIENT LIST
+
+### CLIENT SETNAME - Set client name
+CLIENT SETNAME myapp
+
+### CLIENT GETNAME - Get client name
+CLIENT GETNAME
+
+### MONITOR - Monitor commands
+MONITOR
+
+### SLOWLOG - Get slow queries
+SLOWLOG GET 10
+
+## Advanced Pattern: Items Management
+
+### Create an item (using hash and set)
+# Increment ID counter
+INCR items:next_id
+# Store item data
+HSET items:1 name "Laptop" price 999.99 category "Electronics" quantity 10
+# Add to items set
+SADD items:ids 1
+
+### Get all items
+# Get all IDs
+SMEMBERS items:ids
+# Get each item's data
+HGETALL items:1
+HGETALL items:2
+
+### Update an item
+HSET items:1 price 899.99
+HSET items:1 updated_at "2024-01-01T12:00:00Z"
+
+### Delete an item
+DEL items:1
+SREM items:ids 1
+
+### Search items by category (with secondary index)
+# Add to category set when creating
+SADD category:Electronics 1
+# Find all electronics
+SMEMBERS category:Electronics
+
+## Caching Patterns
+
+### Cache with expiration
+SETEX cache:user:1 3600 '{"name":"John","email":"john@example.com"}'
+
+### Cache aside pattern
+GET cache:user:1
+# If not found, fetch from database and cache
+SET cache:user:1 <data> EX 3600
+
+### Write-through cache
+# Write to database first, then update cache
+SET cache:user:1 <data> EX 3600
+
+### Write-behind cache
+# Write to cache immediately
+SET cache:user:1 <data> EX 3600
+# Queue for database write
+LPUSH queue:db_writes "user:1"
+
+## Performance Optimization
+
+### Pipeline commands (in Node.js)
+```javascript
+const pipeline = client.pipeline();
+pipeline.set('key1', 'value1');
+pipeline.set('key2', 'value2');
+pipeline.set('key3', 'value3');
+await pipeline.exec();
+```
+
+### Use SCAN instead of KEYS in production
+SCAN 0 MATCH items:* COUNT 100
+
+### Use UNLINK instead of DEL for large keys
+UNLINK large_hash
+UNLINK large_list
+
+### Monitor memory usage
+INFO memory
+MEMORY USAGE items:1
+MEMORY STATS
+
+## This module implements these patterns:
+
+1. **Items as Hashes**: Each item stored as `items:{id}` hash
+2. **ID Set**: All item IDs in `items:ids` set
+3. **Auto-increment ID**: `items:next_id` counter
+4. **Atomic Operations**: Using INCR, SADD, SREM
+5. **Efficient Retrieval**: Batch fetch with HGETALL
+
+## Practice Examples
+
+### Example 1: Counter
+INCR page:views
+GET page:views
+INCRBY page:views 10
+
+### Example 2: Session Storage
+SETEX session:abc123 3600 '{"userId":1,"role":"admin"}'
+GET session:abc123
+TTL session:abc123
+
+### Example 3: Rate Limiting
+INCR ratelimit:user:1:2024-01-01
+EXPIRE ratelimit:user:1:2024-01-01 86400
+
+### Example 4: Leaderboard
+ZADD leaderboard 100 "player1" 95 "player2" 110 "player3"
+ZREVRANGE leaderboard 0 9 WITHSCORES
+ZINCRBY leaderboard 5 "player1"
+
+### Example 5: Tag System
+SADD tags:1 "electronics" "laptop" "gaming"
+SMEMBERS tags:1
+SINTER tags:1 tags:2
+
+This collection includes 100+ Redis commands covering:
+- String operations
+- Hash operations (primary data structure in this module)
+- List operations
+- Set operations
+- Sorted set operations
+- Key management
+- Transactions
+- Pub/Sub messaging
+- Server commands
+- Caching patterns
+- Performance optimization
+
+Practice these commands to master Redis!
