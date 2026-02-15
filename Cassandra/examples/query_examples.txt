@@ -1,0 +1,370 @@
+# Cassandra CQL Query Examples
+
+This file contains common CQL queries for the learning module.
+
+## Basic SELECT Queries
+
+### Get all items
+```cql
+SELECT * FROM items;
+```
+
+### Get items ordered by a column (requires clustering key)
+Note: Cassandra doesn't support ORDER BY on non-clustering columns.
+Sorting is done client-side in this learning module.
+```cql
+-- This won't work without a clustering key:
+-- SELECT * FROM items ORDER BY price DESC;
+
+-- Instead, retrieve all and sort client-side
+SELECT * FROM items;
+```
+
+### Get items with LIMIT
+```cql
+SELECT * FROM items LIMIT 10;
+```
+
+## Filtering Queries
+
+### Get items by UUID
+```cql
+SELECT * FROM items WHERE id = 550e8400-e29b-41d4-a716-446655440000;
+```
+
+### Get items by category (uses secondary index)
+```cql
+SELECT * FROM items WHERE category = 'Electronics';
+```
+
+### Get items with ALLOW FILTERING (learning only, avoid in production)
+```cql
+SELECT * FROM items WHERE price > 100 ALLOW FILTERING;
+```
+
+### Get items with multiple conditions
+```cql
+SELECT * FROM items WHERE category = 'Electronics' AND price > 50 ALLOW FILTERING;
+```
+
+## INSERT Queries
+
+### Insert single item
+```cql
+INSERT INTO items (id, name, description, category, price, quantity, created_at, updated_at)
+VALUES (uuid(), 'New Item', 'Description here', 'Category', 99.99, 10, toTimestamp(now()), toTimestamp(now()));
+```
+
+### Insert with specific UUID
+```cql
+INSERT INTO items (id, name, description, category, price, quantity, created_at, updated_at)
+VALUES (550e8400-e29b-41d4-a716-446655440000, 'Specific Item', 'With known UUID', 'Test', 49.99, 5, toTimestamp(now()), toTimestamp(now()));
+```
+
+### Insert if not exists (Lightweight Transaction)
+```cql
+INSERT INTO items (id, name, description, category, price, quantity, created_at, updated_at)
+VALUES (uuid(), 'Unique Item', 'Only if not exists', 'Special', 199.99, 1, toTimestamp(now()), toTimestamp(now()))
+IF NOT EXISTS;
+```
+
+## UPDATE Queries
+
+### Update single item
+```cql
+UPDATE items
+SET price = 89.99, quantity = 20, updated_at = toTimestamp(now())
+WHERE id = 550e8400-e29b-41d4-a716-446655440000;
+```
+
+### Update with condition (Lightweight Transaction)
+```cql
+UPDATE items
+SET quantity = 0
+WHERE id = 550e8400-e29b-41d4-a716-446655440000
+IF quantity > 0;
+```
+
+### Update multiple fields
+```cql
+UPDATE items
+SET name = 'Updated Name',
+    description = 'Updated description',
+    category = 'Updated Category',
+    price = 79.99,
+    quantity = 15,
+    updated_at = toTimestamp(now())
+WHERE id = 550e8400-e29b-41d4-a716-446655440000;
+```
+
+## DELETE Queries
+
+### Delete single item
+```cql
+DELETE FROM items WHERE id = 550e8400-e29b-41d4-a716-446655440000;
+```
+
+### Delete specific columns
+```cql
+DELETE description FROM items WHERE id = 550e8400-e29b-41d4-a716-446655440000;
+```
+
+### Delete with condition (Lightweight Transaction)
+```cql
+DELETE FROM items
+WHERE id = 550e8400-e29b-41d4-a716-446655440000
+IF EXISTS;
+```
+
+## Aggregate Queries
+
+### Count total items
+```cql
+SELECT COUNT(*) FROM items;
+```
+
+### Get min/max price
+```cql
+SELECT MIN(price) AS min_price, MAX(price) AS max_price FROM items;
+```
+
+### Get average price (limited support)
+```cql
+SELECT AVG(price) AS avg_price FROM items;
+```
+
+### Sum of quantities
+```cql
+SELECT SUM(quantity) AS total_quantity FROM items;
+```
+
+## Keyspace Operations
+
+### Create keyspace
+```cql
+CREATE KEYSPACE IF NOT EXISTS learning_db
+WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+```
+
+### Create keyspace with NetworkTopologyStrategy
+```cql
+CREATE KEYSPACE IF NOT EXISTS prod_db
+WITH replication = {'class': 'NetworkTopologyStrategy', 'datacenter1': 3};
+```
+
+### Describe keyspace
+```cql
+DESCRIBE KEYSPACE learning_db;
+```
+
+### List all keyspaces
+```cql
+DESCRIBE KEYSPACES;
+```
+
+### Drop keyspace
+```cql
+DROP KEYSPACE IF EXISTS learning_db;
+```
+
+## Table Operations
+
+### Create table
+```cql
+CREATE TABLE IF NOT EXISTS items (
+  id UUID PRIMARY KEY,
+  name TEXT,
+  description TEXT,
+  category TEXT,
+  price DECIMAL,
+  quantity INT,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+);
+```
+
+### Create table with composite primary key
+```cql
+CREATE TABLE IF NOT EXISTS items_by_category (
+  category TEXT,
+  created_at TIMESTAMP,
+  id UUID,
+  name TEXT,
+  price DECIMAL,
+  quantity INT,
+  PRIMARY KEY (category, created_at)
+) WITH CLUSTERING ORDER BY (created_at DESC);
+```
+
+### Describe table
+```cql
+DESCRIBE TABLE items;
+```
+
+### Alter table - add column
+```cql
+ALTER TABLE items ADD tags SET<TEXT>;
+```
+
+### Alter table - drop column
+```cql
+ALTER TABLE items DROP tags;
+```
+
+### Truncate table (remove all data)
+```cql
+TRUNCATE items;
+```
+
+## Index Operations
+
+### Create secondary index
+```cql
+CREATE INDEX IF NOT EXISTS idx_items_category ON items(category);
+```
+
+### Create index on collection
+```cql
+-- If tags column existed as SET<TEXT>
+CREATE INDEX IF NOT EXISTS idx_items_tags ON items(tags);
+```
+
+### Drop index
+```cql
+DROP INDEX IF EXISTS idx_items_category;
+```
+
+## Advanced Queries
+
+### Using TTL (Time-To-Live)
+```cql
+-- Insert with TTL (expires in 1 hour)
+INSERT INTO items (id, name, price, quantity, created_at, updated_at)
+VALUES (uuid(), 'Temporary Item', 9.99, 1, toTimestamp(now()), toTimestamp(now()))
+USING TTL 3600;
+```
+
+### Check TTL
+```cql
+SELECT TTL(name) FROM items WHERE id = 550e8400-e29b-41d4-a716-446655440000;
+```
+
+### Using WRITETIME
+```cql
+SELECT WRITETIME(name) FROM items WHERE id = 550e8400-e29b-41d4-a716-446655440000;
+```
+
+### Token function (useful for pagination)
+```cql
+SELECT * FROM items WHERE TOKEN(id) > TOKEN(550e8400-e29b-41d4-a716-446655440000) LIMIT 10;
+```
+
+## Materialized Views
+
+### Create materialized view
+```cql
+CREATE MATERIALIZED VIEW IF NOT EXISTS items_by_category AS
+  SELECT * FROM items
+  WHERE category IS NOT NULL AND id IS NOT NULL
+  PRIMARY KEY (category, id);
+```
+
+### Query materialized view
+```cql
+SELECT * FROM items_by_category WHERE category = 'Electronics';
+```
+
+### Drop materialized view
+```cql
+DROP MATERIALIZED VIEW IF EXISTS items_by_category;
+```
+
+## Batch Operations
+
+### Logged batch (atomic)
+```cql
+BEGIN BATCH
+  INSERT INTO items (id, name, price, quantity, created_at, updated_at)
+  VALUES (uuid(), 'Item A', 10.00, 5, toTimestamp(now()), toTimestamp(now()));
+  INSERT INTO items (id, name, price, quantity, created_at, updated_at)
+  VALUES (uuid(), 'Item B', 20.00, 10, toTimestamp(now()), toTimestamp(now()));
+APPLY BATCH;
+```
+
+### Unlogged batch (non-atomic, better performance)
+```cql
+BEGIN UNLOGGED BATCH
+  UPDATE items SET quantity = 0 WHERE id = 550e8400-e29b-41d4-a716-446655440000;
+  UPDATE items SET quantity = 0 WHERE id = 6ba7b810-9dad-11d1-80b4-00c04fd430c8;
+APPLY BATCH;
+```
+
+## Utility Functions
+
+### UUID functions
+```cql
+-- Generate random UUID
+SELECT uuid();
+
+-- Generate time-based UUID
+SELECT now();
+
+-- Convert timestamp to date
+SELECT toDate(now());
+
+-- Convert to timestamp
+SELECT toTimestamp(now());
+```
+
+### Date and time functions
+```cql
+SELECT toTimestamp(now()) AS current_time;
+SELECT toDate(now()) AS current_date;
+SELECT toUnixTimestamp(now()) AS unix_timestamp;
+```
+
+## Data Export (using cqlsh)
+
+### Export to CSV
+```bash
+cqlsh -e "COPY learning_db.items TO '/tmp/items.csv' WITH HEADER = TRUE;"
+```
+
+### Import from CSV
+```bash
+cqlsh -e "COPY learning_db.items FROM '/tmp/items.csv' WITH HEADER = TRUE;"
+```
+
+## Performance Tips
+
+1. **Design tables for queries** - One table per query pattern
+2. **Avoid ALLOW FILTERING** - Use secondary indexes or materialized views
+3. **Use prepared statements** - Better performance and security
+4. **Keep partitions small** - Aim for <100MB per partition
+5. **Use appropriate consistency** - ONE for reads, QUORUM for critical writes
+6. **Avoid large batches** - Keep batches small (<50 statements)
+7. **Use TTL for temporary data** - Auto-cleanup of expired data
+
+## CQL vs SQL Quick Reference
+
+| SQL | CQL |
+|-----|-----|
+| AUTO_INCREMENT | uuid() |
+| VARCHAR | TEXT |
+| DATETIME | TIMESTAMP |
+| FLOAT/DOUBLE | FLOAT/DOUBLE/DECIMAL |
+| JOIN | Not supported (denormalize) |
+| LIKE '%text%' | Not supported (use external search) |
+| ORDER BY any_col | ORDER BY clustering_col only |
+| GROUP BY | Limited to partition/clustering keys |
+| HAVING | Not supported |
+| Subqueries | Not supported |
+
+## Notes
+
+- Cassandra is optimized for writes; reads may require careful data modeling
+- Design your data model based on query patterns, not entity relationships
+- Use ALLOW FILTERING only for development/learning; avoid in production
+- Secondary indexes work best on low-cardinality columns
+- Materialized views are maintained automatically but have overhead
+- Lightweight transactions (IF) provide linearizable consistency but are slower
