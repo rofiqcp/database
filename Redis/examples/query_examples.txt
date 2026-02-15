@@ -1,0 +1,364 @@
+# Redis Command Examples
+
+This file contains common Redis commands for the learning module.
+
+## Basic String Commands
+
+### Set and get a value
+```redis
+SET mykey "Hello World"
+GET mykey
+```
+
+### Set with expiration (TTL)
+```redis
+SET session:user1 "session_data" EX 3600   # Expires in 1 hour
+SET temp:key "value" PX 5000               # Expires in 5 seconds
+```
+
+### Increment/Decrement
+```redis
+SET counter 10
+INCR counter          # 11
+INCRBY counter 5      # 16
+DECR counter          # 15
+DECRBY counter 3      # 12
+```
+
+### Multiple keys
+```redis
+MSET key1 "val1" key2 "val2" key3 "val3"
+MGET key1 key2 key3
+```
+
+## Key Management
+
+### Check if key exists
+```redis
+EXISTS mykey
+```
+
+### Delete keys
+```redis
+DEL mykey
+DEL key1 key2 key3    # Delete multiple
+```
+
+### Set expiration on existing key
+```redis
+EXPIRE mykey 60       # Expires in 60 seconds
+TTL mykey             # Check remaining time
+PERSIST mykey         # Remove expiration
+```
+
+### Find keys (use SCAN in production)
+```redis
+KEYS item:*           # All keys matching pattern (dev only)
+SCAN 0 MATCH item:*   # Safe iteration for production
+```
+
+### Key type
+```redis
+TYPE mykey
+```
+
+## Hash Commands (Object-like storage)
+
+### Set hash fields
+```redis
+HSET user:1 name "John" age "30" email "john@example.com"
+```
+
+### Get hash fields
+```redis
+HGET user:1 name
+HGETALL user:1
+HMGET user:1 name email
+```
+
+### Check field exists
+```redis
+HEXISTS user:1 name
+```
+
+### Delete hash field
+```redis
+HDEL user:1 email
+```
+
+### Increment hash field
+```redis
+HINCRBY user:1 age 1
+```
+
+### Get all field names
+```redis
+HKEYS user:1
+HVALS user:1
+HLEN user:1
+```
+
+## List Commands (Queue/Stack)
+
+### Push elements
+```redis
+LPUSH queue "task1"           # Push to left (head)
+RPUSH queue "task2" "task3"   # Push to right (tail)
+```
+
+### Pop elements
+```redis
+LPOP queue                    # Pop from left
+RPOP queue                    # Pop from right
+BLPOP queue 5                 # Blocking pop with timeout
+```
+
+### Get elements
+```redis
+LRANGE queue 0 -1             # Get all elements
+LRANGE queue 0 4              # Get first 5 elements
+LINDEX queue 0                # Get element at index
+LLEN queue                    # Get list length
+```
+
+### Trim list
+```redis
+LTRIM queue 0 99              # Keep only first 100 elements
+```
+
+## Set Commands (Unique collections)
+
+### Add members
+```redis
+SADD tags "redis" "database" "nosql" "fast"
+```
+
+### Get members
+```redis
+SMEMBERS tags
+SCARD tags                    # Count of members
+SISMEMBER tags "redis"        # Check membership
+```
+
+### Remove members
+```redis
+SREM tags "fast"
+```
+
+### Set operations
+```redis
+SADD set1 "a" "b" "c"
+SADD set2 "b" "c" "d"
+
+SINTER set1 set2              # Intersection: {"b", "c"}
+SUNION set1 set2              # Union: {"a", "b", "c", "d"}
+SDIFF set1 set2               # Difference: {"a"}
+```
+
+### Random member
+```redis
+SRANDMEMBER tags
+SPOP tags                     # Remove and return random member
+```
+
+## Sorted Set Commands (Ranked data)
+
+### Add members with scores
+```redis
+ZADD leaderboard 100 "player1" 85 "player2" 92 "player3"
+```
+
+### Get members by rank
+```redis
+ZRANGE leaderboard 0 -1                    # All, lowest to highest
+ZREVRANGE leaderboard 0 -1                 # All, highest to lowest
+ZRANGE leaderboard 0 -1 WITHSCORES        # With scores
+```
+
+### Get members by score range
+```redis
+ZRANGEBYSCORE leaderboard 80 100
+ZRANGEBYSCORE leaderboard -inf +inf       # All members
+```
+
+### Get rank and score
+```redis
+ZRANK leaderboard "player1"               # Rank (0-based)
+ZSCORE leaderboard "player1"              # Score
+```
+
+### Update score
+```redis
+ZINCRBY leaderboard 10 "player2"          # Add 10 to score
+```
+
+### Remove members
+```redis
+ZREM leaderboard "player3"
+ZREMRANGEBYSCORE leaderboard 0 50         # Remove by score range
+```
+
+### Count members
+```redis
+ZCARD leaderboard                          # Total members
+ZCOUNT leaderboard 80 100                  # Members in score range
+```
+
+## This Module's Data Pattern
+
+### Create an item (what the API does)
+```redis
+INCR item:counter                          # Get next ID (returns e.g., 1)
+SET item:1 '{"id":1,"name":"Laptop","description":"Gaming laptop","category":"Electronics","price":1299.99,"quantity":5,"created_at":"2024-01-01T10:00:00.000Z","updated_at":"2024-01-01T10:00:00.000Z"}'
+SADD items:index "1"                       # Add ID to index
+```
+
+### Get all items (what the API does)
+```redis
+SMEMBERS items:index                       # Get all IDs: {"1", "2", "3"}
+MGET item:1 item:2 item:3                  # Get all items in one call
+```
+
+### Get single item
+```redis
+GET item:1                                 # Returns JSON string
+```
+
+### Update an item
+```redis
+SET item:1 '{"id":1,"name":"Updated Laptop","description":"Updated description","category":"Electronics","price":1499.99,"quantity":3,"created_at":"2024-01-01T10:00:00.000Z","updated_at":"2024-01-02T10:00:00.000Z"}'
+```
+
+### Delete an item
+```redis
+DEL item:1                                 # Remove the key
+SREM items:index "1"                       # Remove from index
+```
+
+### Search items (application-level)
+```redis
+# Redis doesn't have built-in text search for JSON strings
+# The API retrieves all items and filters in Node.js:
+SMEMBERS items:index
+MGET item:1 item:2 item:3
+# Then filter in application code
+```
+
+## Transaction Examples
+
+### Basic transaction (MULTI/EXEC)
+```redis
+MULTI
+SET item:1 '{"id":1,"name":"Item","price":99.99}'
+SADD items:index "1"
+INCR item:counter
+EXEC
+```
+
+### Discard transaction
+```redis
+MULTI
+SET key1 "value1"
+SET key2 "value2"
+DISCARD                                    # Abort transaction
+```
+
+### Watch for optimistic locking
+```redis
+WATCH item:counter
+val = GET item:counter
+MULTI
+SET item:counter (val + 1)
+EXEC                                      # Fails if counter changed
+```
+
+## Pub/Sub Examples
+
+### Subscribe to channel
+```redis
+SUBSCRIBE notifications
+PSUBSCRIBE item:*                          # Pattern subscribe
+```
+
+### Publish to channel
+```redis
+PUBLISH notifications "New item created!"
+PUBLISH item:created '{"id":1,"name":"Laptop"}'
+```
+
+## Server Commands
+
+### Server info
+```redis
+PING                                       # Check connection
+INFO                                       # Server information
+INFO memory                                # Memory stats
+INFO clients                               # Client connections
+```
+
+### Database management
+```redis
+DBSIZE                                     # Number of keys
+FLUSHDB                                    # Delete all keys (current DB)
+FLUSHALL                                   # Delete all keys (all DBs)
+```
+
+### Persistence
+```redis
+BGSAVE                                     # Background RDB save
+LASTSAVE                                   # Timestamp of last save
+```
+
+### Monitor
+```redis
+MONITOR                                    # Real-time command log
+SLOWLOG GET 10                             # Last 10 slow commands
+```
+
+## Performance Tips
+
+1. **Use MGET/MSET** for bulk operations instead of individual GET/SET
+2. **Use pipelining** to send multiple commands in one round trip
+3. **Use SCAN** instead of KEYS in production
+4. **Set TTL** on temporary keys to prevent memory leaks
+5. **Use appropriate data structures** (Hash for objects, Set for unique values)
+6. **Avoid large keys** - break them into smaller ones
+7. **Use Redis Cluster** for horizontal scaling
+
+## Common Redis CLI Options
+
+```bash
+# Connect to Redis
+redis-cli
+
+# Connect to specific host/port
+redis-cli -h hostname -p 6379
+
+# Connect with password
+redis-cli -a password
+
+# Execute single command
+redis-cli GET mykey
+
+# Execute command on specific database
+redis-cli -n 1 GET mykey
+
+# Pipe commands from file
+cat commands.txt | redis-cli
+
+# Latency testing
+redis-cli --latency
+
+# Memory analysis
+redis-cli --bigkeys
+```
+
+## Notes
+
+- Redis is single-threaded; commands are executed sequentially
+- All Redis operations are atomic
+- Use SCAN instead of KEYS for large databases
+- TTL is in seconds (use PTTL for milliseconds)
+- Sets are unordered; use Sorted Sets for ordering
+- Strings can store up to 512MB
+- Lists can hold over 4 billion elements
