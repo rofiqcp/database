@@ -1,0 +1,634 @@
+# Elasticsearch DSL Query Examples
+
+## Basic Queries
+
+### Match All Documents
+GET items/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+### Match Query (Full-Text Search)
+GET items/_search
+{
+  "query": {
+    "match": {
+      "name": "laptop"
+    }
+  }
+}
+
+### Match with Fuzziness (Handles Typos)
+GET items/_search
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "laptpo",
+        "fuzziness": "AUTO"
+      }
+    }
+  }
+}
+
+### Multi-Match Query (Search Multiple Fields)
+GET items/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "gaming laptop",
+      "fields": ["name", "description"]
+    }
+  }
+}
+
+### Multi-Match with Field Boosting
+GET items/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "gaming",
+      "fields": ["name^3", "description"],
+      "fuzziness": "AUTO"
+    }
+  }
+}
+
+## Term-Level Queries (Exact Match)
+
+### Term Query (Exact Match on Keyword)
+GET items/_search
+{
+  "query": {
+    "term": {
+      "category": "Electronics"
+    }
+  }
+}
+
+### Terms Query (Match Any of Multiple Values)
+GET items/_search
+{
+  "query": {
+    "terms": {
+      "category": ["Electronics", "Books", "Accessories"]
+    }
+  }
+}
+
+### Range Query
+GET items/_search
+{
+  "query": {
+    "range": {
+      "price": {
+        "gte": 100,
+        "lte": 500
+      }
+    }
+  }
+}
+
+### Range Query on Dates
+GET items/_search
+{
+  "query": {
+    "range": {
+      "created_at": {
+        "gte": "2024-01-01",
+        "lte": "2024-12-31"
+      }
+    }
+  }
+}
+
+### Exists Query (Field Has Value)
+GET items/_search
+{
+  "query": {
+    "exists": {
+      "field": "description"
+    }
+  }
+}
+
+### Wildcard Query
+GET items/_search
+{
+  "query": {
+    "wildcard": {
+      "name.keyword": "Lap*"
+    }
+  }
+}
+
+### Prefix Query
+GET items/_search
+{
+  "query": {
+    "prefix": {
+      "name.keyword": "Wire"
+    }
+  }
+}
+
+## Bool Query (Compound Queries)
+
+### Must (AND Logic)
+GET items/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "name": "laptop" } },
+        { "term": { "category": "Electronics" } }
+      ]
+    }
+  }
+}
+
+### Must + Filter (AND with Caching)
+GET items/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "name": "laptop" } }
+      ],
+      "filter": [
+        { "term": { "category": "Electronics" } },
+        { "range": { "price": { "gte": 1000, "lte": 2000 } } }
+      ]
+    }
+  }
+}
+
+### Should (OR Logic)
+GET items/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        { "match": { "name": "laptop" } },
+        { "match": { "name": "keyboard" } }
+      ],
+      "minimum_should_match": 1
+    }
+  }
+}
+
+### Must Not (NOT Logic)
+GET items/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match_all": {} }
+      ],
+      "must_not": [
+        { "term": { "category": "Books" } }
+      ]
+    }
+  }
+}
+
+### Complex Bool Query
+GET items/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "multi_match": { "query": "gaming", "fields": ["name", "description"] } }
+      ],
+      "filter": [
+        { "term": { "category": "Electronics" } },
+        { "range": { "price": { "gte": 100 } } }
+      ],
+      "must_not": [
+        { "range": { "quantity": { "lt": 5 } } }
+      ],
+      "should": [
+        { "match": { "description": "RGB" } }
+      ]
+    }
+  }
+}
+
+## Sorting
+
+### Sort by Price Ascending
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "sort": [
+    { "price": { "order": "asc" } }
+  ]
+}
+
+### Sort by Price Descending
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "sort": [
+    { "price": { "order": "desc" } }
+  ]
+}
+
+### Multiple Sort Fields
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "sort": [
+    { "category": { "order": "asc" } },
+    { "price": { "order": "desc" } }
+  ]
+}
+
+### Sort by Date
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "sort": [
+    { "created_at": { "order": "desc" } }
+  ]
+}
+
+### Sort by Relevance Score (Default)
+GET items/_search
+{
+  "query": {
+    "match": { "name": "laptop" }
+  },
+  "sort": [
+    "_score",
+    { "created_at": { "order": "desc" } }
+  ]
+}
+
+## Pagination
+
+### Basic Pagination (from/size)
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "from": 0,
+  "size": 10
+}
+
+### Second Page
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "from": 10,
+  "size": 10
+}
+
+### Top 5 Most Expensive
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "sort": [{ "price": { "order": "desc" } }],
+  "size": 5
+}
+
+## Aggregations
+
+### Terms Aggregation (Group by Category)
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "categories": {
+      "terms": {
+        "field": "category"
+      }
+    }
+  }
+}
+
+### Stats Aggregation (Price Statistics)
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "price_stats": {
+      "stats": {
+        "field": "price"
+      }
+    }
+  }
+}
+
+### Average Price
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "avg_price": {
+      "avg": {
+        "field": "price"
+      }
+    }
+  }
+}
+
+### Min and Max Price
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "min_price": { "min": { "field": "price" } },
+    "max_price": { "max": { "field": "price" } }
+  }
+}
+
+### Sum of Quantities
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "total_quantity": {
+      "sum": {
+        "field": "quantity"
+      }
+    }
+  }
+}
+
+### Histogram (Price Ranges)
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "price_histogram": {
+      "histogram": {
+        "field": "price",
+        "interval": 100
+      }
+    }
+  }
+}
+
+### Range Aggregation
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "price_ranges": {
+      "range": {
+        "field": "price",
+        "ranges": [
+          { "to": 50 },
+          { "from": 50, "to": 200 },
+          { "from": 200, "to": 500 },
+          { "from": 500 }
+        ]
+      }
+    }
+  }
+}
+
+### Nested Aggregation (Avg Price per Category)
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "by_category": {
+      "terms": { "field": "category" },
+      "aggs": {
+        "avg_price": { "avg": { "field": "price" } },
+        "total_quantity": { "sum": { "field": "quantity" } }
+      }
+    }
+  }
+}
+
+### Date Histogram
+GET items/_search
+{
+  "size": 0,
+  "aggs": {
+    "items_over_time": {
+      "date_histogram": {
+        "field": "created_at",
+        "calendar_interval": "month"
+      }
+    }
+  }
+}
+
+## Document Operations
+
+### Index a Document (Create)
+POST items/_doc
+{
+  "name": "Laptop",
+  "description": "Gaming laptop with RTX 4070",
+  "category": "Electronics",
+  "price": 1299.99,
+  "quantity": 5,
+  "created_at": "2024-01-01T10:00:00.000Z",
+  "updated_at": "2024-01-01T10:00:00.000Z"
+}
+
+### Index with Specific ID
+PUT items/_doc/my-custom-id
+{
+  "name": "Mouse",
+  "description": "Wireless mouse",
+  "category": "Electronics",
+  "price": 29.99,
+  "quantity": 50,
+  "created_at": "2024-01-01T10:00:00.000Z",
+  "updated_at": "2024-01-01T10:00:00.000Z"
+}
+
+### Get Document by ID
+GET items/_doc/<document_id>
+
+### Update Document (Partial)
+POST items/_update/<document_id>
+{
+  "doc": {
+    "price": 1399.99,
+    "updated_at": "2024-06-01T10:00:00.000Z"
+  }
+}
+
+### Delete Document
+DELETE items/_doc/<document_id>
+
+### Bulk Operations
+POST _bulk
+{ "index": { "_index": "items" } }
+{ "name": "Keyboard", "category": "Electronics", "price": 79.99, "quantity": 15 }
+{ "index": { "_index": "items" } }
+{ "name": "Mouse", "category": "Electronics", "price": 49.99, "quantity": 20 }
+{ "index": { "_index": "items" } }
+{ "name": "Monitor", "category": "Electronics", "price": 299.99, "quantity": 8 }
+
+### Delete by Query
+POST items/_delete_by_query
+{
+  "query": {
+    "range": {
+      "price": { "lt": 10 }
+    }
+  }
+}
+
+### Update by Query
+POST items/_update_by_query
+{
+  "query": {
+    "term": { "category": "Electronics" }
+  },
+  "script": {
+    "source": "ctx._source.price = ctx._source.price * 1.1",
+    "lang": "painless"
+  }
+}
+
+## Index Management
+
+### Create Index with Mappings
+PUT items
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "properties": {
+      "name": { "type": "text", "fields": { "keyword": { "type": "keyword" } } },
+      "description": { "type": "text" },
+      "category": { "type": "keyword" },
+      "price": { "type": "float" },
+      "quantity": { "type": "integer" },
+      "created_at": { "type": "date" },
+      "updated_at": { "type": "date" }
+    }
+  }
+}
+
+### Get Index Mapping
+GET items/_mapping
+
+### Get Index Settings
+GET items/_settings
+
+### Delete Index
+DELETE items
+
+### Check Index Exists
+HEAD items
+
+### Get Index Stats
+GET items/_stats
+
+### Get Document Count
+GET items/_count
+
+## Cluster Operations
+
+### Cluster Health
+GET _cluster/health?pretty
+
+### Cluster Stats
+GET _cluster/stats?pretty
+
+### Node Info
+GET _nodes?pretty
+
+### Cat APIs (Human-Readable)
+GET _cat/indices?v
+GET _cat/health?v
+GET _cat/nodes?v
+GET _cat/shards?v
+GET _cat/count/items?v
+
+## Advanced Queries
+
+### Highlight Search Results
+GET items/_search
+{
+  "query": {
+    "match": { "description": "gaming laptop" }
+  },
+  "highlight": {
+    "fields": {
+      "description": {}
+    }
+  }
+}
+
+### Source Filtering (Select Specific Fields)
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "_source": ["name", "price", "category"]
+}
+
+### Exclude Fields
+GET items/_search
+{
+  "query": { "match_all": {} },
+  "_source": {
+    "excludes": ["description", "created_at", "updated_at"]
+  }
+}
+
+### Explain Query Scoring
+GET items/_explain/<document_id>
+{
+  "query": {
+    "match": { "name": "laptop" }
+  }
+}
+
+### Phrase Match
+GET items/_search
+{
+  "query": {
+    "match_phrase": {
+      "description": "gaming laptop"
+    }
+  }
+}
+
+### Query String (Lucene Syntax)
+GET items/_search
+{
+  "query": {
+    "query_string": {
+      "query": "name:laptop AND category:Electronics",
+      "default_field": "name"
+    }
+  }
+}
+
+## Analyzers
+
+### Test Standard Analyzer
+POST _analyze
+{
+  "analyzer": "standard",
+  "text": "High-Performance Gaming Laptop"
+}
+
+### Test English Analyzer
+POST _analyze
+{
+  "analyzer": "english",
+  "text": "Running quickly through the forest"
+}
+
+### Test Custom Analyzer
+POST _analyze
+{
+  "tokenizer": "standard",
+  "filter": ["lowercase", "stop"],
+  "text": "The Quick Brown Fox"
+}
