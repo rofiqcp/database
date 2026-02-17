@@ -1,0 +1,404 @@
+{
+  "items": [
+    {
+      "name": "Gaming Laptop",
+      "description": "High-performance laptop for gaming and creative work",
+      "category": "Electronics",
+      "price": 1299.99,
+      "stock": 15,
+      "tags": ["gaming", "tech", "portable"]
+    },
+    {
+      "name": "Wireless Mouse",
+      "description": "Ergonomic wireless mouse with precision tracking",
+      "category": "Electronics",
+      "price": 29.99,
+      "stock": 50,
+      "tags": ["tech", "accessory", "wireless"]
+    },
+    {
+      "name": "Mechanical Keyboard",
+      "description": "RGB mechanical keyboard with blue switches",
+      "category": "Electronics",
+      "price": 89.99,
+      "stock": 30,
+      "tags": ["gaming", "tech", "rgb"]
+    },
+    {
+      "name": "4K Monitor",
+      "description": "27-inch 4K UHD monitor with HDR support",
+      "category": "Electronics",
+      "price": 399.99,
+      "stock": 20,
+      "tags": ["display", "tech", "professional"]
+    },
+    {
+      "name": "USB-C Hub",
+      "description": "7-in-1 USB-C hub with HDMI, USB 3.0, and card reader",
+      "category": "Electronics",
+      "price": 49.99,
+      "stock": 100,
+      "tags": ["accessory", "tech", "portable"]
+    },
+    {
+      "name": "Noise Cancelling Headphones",
+      "description": "Premium wireless headphones with active noise cancellation",
+      "category": "Audio",
+      "price": 249.99,
+      "stock": 35,
+      "tags": ["audio", "wireless", "premium"]
+    },
+    {
+      "name": "Bluetooth Speaker",
+      "description": "Portable waterproof Bluetooth speaker",
+      "category": "Audio",
+      "price": 79.99,
+      "stock": 45,
+      "tags": ["audio", "wireless", "portable"]
+    },
+    {
+      "name": "Studio Microphone",
+      "description": "Professional USB condenser microphone for streaming",
+      "category": "Audio",
+      "price": 129.99,
+      "stock": 25,
+      "tags": ["audio", "streaming", "professional"]
+    },
+    {
+      "name": "Webcam 1080p",
+      "description": "Full HD webcam with auto-focus and noise reduction",
+      "category": "Electronics",
+      "price": 69.99,
+      "stock": 40,
+      "tags": ["streaming", "tech", "camera"]
+    },
+    {
+      "name": "External SSD 1TB",
+      "description": "Portable solid-state drive with USB 3.1",
+      "category": "Storage",
+      "price": 119.99,
+      "stock": 60,
+      "tags": ["storage", "tech", "portable"]
+    },
+    {
+      "name": "Graphics Tablet",
+      "description": "Digital drawing tablet with pressure sensitivity",
+      "category": "Creative",
+      "price": 189.99,
+      "stock": 20,
+      "tags": ["creative", "professional", "drawing"]
+    },
+    {
+      "name": "Ring Light",
+      "description": "LED ring light for photography and video",
+      "category": "Photography",
+      "price": 45.99,
+      "stock": 55,
+      "tags": ["lighting", "streaming", "photography"]
+    },
+    {
+      "name": "DSLR Camera",
+      "description": "24MP DSLR camera with 18-55mm lens",
+      "category": "Photography",
+      "price": 599.99,
+      "stock": 12,
+      "tags": ["camera", "photography", "professional"]
+    },
+    {
+      "name": "Camera Tripod",
+      "description": "Adjustable aluminum tripod for cameras and phones",
+      "category": "Photography",
+      "price": 39.99,
+      "stock": 70,
+      "tags": ["photography", "accessory", "portable"]
+    },
+    {
+      "name": "Smart Watch",
+      "description": "Fitness tracking smartwatch with heart rate monitor",
+      "category": "Wearables",
+      "price": 199.99,
+      "stock": 40,
+      "tags": ["wearable", "fitness", "tech"]
+    },
+    {
+      "name": "Fitness Tracker",
+      "description": "Waterproof fitness band with sleep tracking",
+      "category": "Wearables",
+      "price": 79.99,
+      "stock": 65,
+      "tags": ["wearable", "fitness", "health"]
+    },
+    {
+      "name": "VR Headset",
+      "description": "Virtual reality headset with 6DOF tracking",
+      "category": "Gaming",
+      "price": 399.99,
+      "stock": 18,
+      "tags": ["gaming", "vr", "tech"]
+    },
+    {
+      "name": "Gaming Chair",
+      "description": "Ergonomic gaming chair with lumbar support",
+      "category": "Furniture",
+      "price": 249.99,
+      "stock": 25,
+      "tags": ["gaming", "furniture", "ergonomic"]
+    },
+    {
+      "name": "Standing Desk",
+      "description": "Electric height-adjustable standing desk",
+      "category": "Furniture",
+      "price": 449.99,
+      "stock": 15,
+      "tags": ["furniture", "ergonomic", "office"]
+    },
+    {
+      "name": "Desk Lamp",
+      "description": "LED desk lamp with adjustable brightness",
+      "category": "Furniture",
+      "price": 34.99,
+      "stock": 80,
+      "tags": ["lighting", "office", "accessory"]
+    },
+    {
+      "name": "Smartphone",
+      "description": "5G smartphone with 128GB storage",
+      "category": "Mobile",
+      "price": 799.99,
+      "stock": 30,
+      "tags": ["mobile", "tech", "5g"]
+    },
+    {
+      "name": "Phone Case",
+      "description": "Protective silicone phone case",
+      "category": "Mobile",
+      "price": 19.99,
+      "stock": 150,
+      "tags": ["mobile", "accessory", "protective"]
+    },
+    {
+      "name": "Screen Protector",
+      "description": "Tempered glass screen protector",
+      "category": "Mobile",
+      "price": 12.99,
+      "stock": 200,
+      "tags": ["mobile", "accessory", "protective"]
+    },
+    {
+      "name": "Wireless Charger",
+      "description": "Fast wireless charging pad",
+      "category": "Mobile",
+      "price": 29.99,
+      "stock": 90,
+      "tags": ["mobile", "wireless", "charging"]
+    },
+    {
+      "name": "Power Bank 20000mAh",
+      "description": "High-capacity portable power bank",
+      "category": "Mobile",
+      "price": 39.99,
+      "stock": 75,
+      "tags": ["mobile", "portable", "charging"]
+    },
+    {
+      "name": "Tablet 10-inch",
+      "description": "Android tablet with stylus support",
+      "category": "Mobile",
+      "price": 299.99,
+      "stock": 35,
+      "tags": ["mobile", "tech", "portable"]
+    },
+    {
+      "name": "E-Reader",
+      "description": "E-ink display e-reader with backlight",
+      "category": "Mobile",
+      "price": 129.99,
+      "stock": 45,
+      "tags": ["reading", "tech", "portable"]
+    },
+    {
+      "name": "Portable Projector",
+      "description": "Mini LED projector with wireless connectivity",
+      "category": "Electronics",
+      "price": 199.99,
+      "stock": 20,
+      "tags": ["display", "portable", "entertainment"]
+    },
+    {
+      "name": "Smart Home Hub",
+      "description": "Voice-controlled smart home hub with display",
+      "category": "Smart Home",
+      "price": 99.99,
+      "stock": 50,
+      "tags": ["smart-home", "tech", "voice-control"]
+    },
+    {
+      "name": "Smart Bulbs (4-pack)",
+      "description": "WiFi-enabled RGB smart light bulbs",
+      "category": "Smart Home",
+      "price": 49.99,
+      "stock": 60,
+      "tags": ["smart-home", "lighting", "rgb"]
+    },
+    {
+      "name": "Security Camera",
+      "description": "Wireless indoor security camera with night vision",
+      "category": "Smart Home",
+      "price": 79.99,
+      "stock": 40,
+      "tags": ["smart-home", "camera", "security"]
+    },
+    {
+      "name": "Smart Thermostat",
+      "description": "WiFi-enabled programmable thermostat",
+      "category": "Smart Home",
+      "price": 159.99,
+      "stock": 30,
+      "tags": ["smart-home", "energy", "automation"]
+    },
+    {
+      "name": "Robot Vacuum",
+      "description": "Smart robot vacuum with mapping technology",
+      "category": "Smart Home",
+      "price": 299.99,
+      "stock": 25,
+      "tags": ["smart-home", "automation", "cleaning"]
+    },
+    {
+      "name": "Air Purifier",
+      "description": "HEPA air purifier with smart controls",
+      "category": "Smart Home",
+      "price": 179.99,
+      "stock": 35,
+      "tags": ["smart-home", "health", "air-quality"]
+    },
+    {
+      "name": "Coffee Maker",
+      "description": "Programmable drip coffee maker",
+      "category": "Appliances",
+      "price": 79.99,
+      "stock": 40,
+      "tags": ["appliance", "kitchen", "coffee"]
+    },
+    {
+      "name": "Blender",
+      "description": "High-speed blender for smoothies and more",
+      "category": "Appliances",
+      "price": 89.99,
+      "stock": 45,
+      "tags": ["appliance", "kitchen", "health"]
+    },
+    {
+      "name": "Air Fryer",
+      "description": "Digital air fryer with preset cooking modes",
+      "category": "Appliances",
+      "price": 99.99,
+      "stock": 50,
+      "tags": ["appliance", "kitchen", "cooking"]
+    },
+    {
+      "name": "Electric Kettle",
+      "description": "Stainless steel electric kettle with auto shut-off",
+      "category": "Appliances",
+      "price": 34.99,
+      "stock": 70,
+      "tags": ["appliance", "kitchen", "tea"]
+    },
+    {
+      "name": "Backpack",
+      "description": "Water-resistant laptop backpack with USB charging port",
+      "category": "Bags",
+      "price": 49.99,
+      "stock": 80,
+      "tags": ["bag", "portable", "travel"]
+    },
+    {
+      "name": "Messenger Bag",
+      "description": "Canvas messenger bag for laptop and documents",
+      "category": "Bags",
+      "price": 39.99,
+      "stock": 60,
+      "tags": ["bag", "portable", "professional"]
+    },
+    {
+      "name": "Gym Bag",
+      "description": "Duffel bag with shoe compartment",
+      "category": "Bags",
+      "price": 29.99,
+      "stock": 55,
+      "tags": ["bag", "fitness", "sports"]
+    },
+    {
+      "name": "Cable Organizer",
+      "description": "Cable management box for desk organization",
+      "category": "Office",
+      "price": 19.99,
+      "stock": 100,
+      "tags": ["office", "organization", "accessory"]
+    },
+    {
+      "name": "Desk Organizer",
+      "description": "Bamboo desk organizer with multiple compartments",
+      "category": "Office",
+      "price": 24.99,
+      "stock": 85,
+      "tags": ["office", "organization", "eco-friendly"]
+    },
+    {
+      "name": "Whiteboard",
+      "description": "Magnetic dry-erase whiteboard 24x36",
+      "category": "Office",
+      "price": 34.99,
+      "stock": 40,
+      "tags": ["office", "organization", "planning"]
+    },
+    {
+      "name": "Office Chair",
+      "description": "Ergonomic mesh office chair with adjustable height",
+      "category": "Furniture",
+      "price": 199.99,
+      "stock": 30,
+      "tags": ["furniture", "office", "ergonomic"]
+    },
+    {
+      "name": "Monitor Stand",
+      "description": "Adjustable monitor stand with storage drawer",
+      "category": "Office",
+      "price": 29.99,
+      "stock": 65,
+      "tags": ["office", "organization", "ergonomic"]
+    },
+    {
+      "name": "Printer All-in-One",
+      "description": "Wireless inkjet printer with scanner and copier",
+      "category": "Office",
+      "price": 149.99,
+      "stock": 25,
+      "tags": ["office", "tech", "printing"]
+    },
+    {
+      "name": "Paper Shredder",
+      "description": "Cross-cut paper shredder for security",
+      "category": "Office",
+      "price": 59.99,
+      "stock": 35,
+      "tags": ["office", "security", "organization"]
+    },
+    {
+      "name": "Yoga Mat",
+      "description": "Non-slip yoga mat with carrying strap",
+      "category": "Fitness",
+      "price": 29.99,
+      "stock": 90,
+      "tags": ["fitness", "health", "yoga"]
+    },
+    {
+      "name": "Resistance Bands Set",
+      "description": "Set of 5 resistance bands with handles",
+      "category": "Fitness",
+      "price": 24.99,
+      "stock": 100,
+      "tags": ["fitness", "health", "strength"]
+    }
+  ]
+}
