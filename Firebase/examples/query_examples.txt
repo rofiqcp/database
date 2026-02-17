@@ -1,0 +1,337 @@
+# Firebase/Firestore Query Examples
+# 50+ examples covering Admin SDK, Firestore queries, and Firebase CLI
+
+## ========================================
+## Firebase Admin SDK - JavaScript/Node.js
+## ========================================
+
+# 1. Initialize Firebase Admin SDK
+const admin = require('firebase-admin');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://project-id.firebaseio.com'
+});
+const db = admin.firestore();
+
+# 2. Get all documents from collection
+const snapshot = await db.collection('items').get();
+snapshot.forEach(doc => console.log(doc.id, doc.data()));
+
+# 3. Get single document by ID
+const doc = await db.collection('items').doc('abc123').get();
+if (doc.exists) console.log(doc.data());
+
+# 4. Add new document with auto-generated ID
+const docRef = await db.collection('items').add({
+  name: 'Laptop',
+  price: 999.99,
+  createdAt: admin.firestore.FieldValue.serverTimestamp()
+});
+console.log('Created document ID:', docRef.id);
+
+# 5. Set document with specific ID
+await db.collection('items').doc('custom-id').set({
+  name: 'Smartphone',
+  price: 799.99
+});
+
+# 6. Update existing document
+await db.collection('items').doc('abc123').update({
+  price: 1099.99,
+  updatedAt: admin.firestore.FieldValue.serverTimestamp()
+});
+
+# 7. Delete document
+await db.collection('items').doc('abc123').delete();
+
+# 8. Query with where clause (equality)
+const snapshot = await db.collection('items')
+  .where('category', '==', 'Electronics')
+  .get();
+
+# 9. Query with multiple where clauses
+const snapshot = await db.collection('items')
+  .where('category', '==', 'Electronics')
+  .where('featured', '==', true)
+  .get();
+
+# 10. Query with orderBy
+const snapshot = await db.collection('items')
+  .orderBy('price', 'desc')
+  .get();
+
+# 11. Query with limit
+const snapshot = await db.collection('items')
+  .orderBy('createdAt', 'desc')
+  .limit(10)
+  .get();
+
+# 12. Query with range filter (greater than)
+const snapshot = await db.collection('items')
+  .where('price', '>', 100)
+  .orderBy('price')
+  .get();
+
+# 13. Query with range filter (less than or equal)
+const snapshot = await db.collection('items')
+  .where('stock', '<=', 10)
+  .get();
+
+# 14. Query between two values
+const snapshot = await db.collection('items')
+  .where('price', '>=', 100)
+  .where('price', '<=', 500)
+  .orderBy('price')
+  .get();
+
+# 15. Query with array-contains
+const snapshot = await db.collection('items')
+  .where('tags', 'array-contains', 'sale')
+  .get();
+
+# 16. Query with in operator
+const snapshot = await db.collection('items')
+  .where('category', 'in', ['Electronics', 'Books', 'Toys'])
+  .get();
+
+# 17. Pagination - first page
+const first = await db.collection('items')
+  .orderBy('name')
+  .limit(25)
+  .get();
+
+# 18. Pagination - next page
+const lastDoc = first.docs[first.docs.length - 1];
+const next = await db.collection('items')
+  .orderBy('name')
+  .startAfter(lastDoc)
+  .limit(25)
+  .get();
+
+# 19. Real-time listener for collection
+const unsubscribe = db.collection('items')
+  .onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === 'added') console.log('New:', change.doc.data());
+      if (change.type === 'modified') console.log('Modified:', change.doc.data());
+      if (change.type === 'removed') console.log('Removed:', change.doc.data());
+    });
+  });
+
+# 20. Real-time listener for single document
+const unsubscribe = db.collection('items').doc('abc123')
+  .onSnapshot(doc => {
+    if (doc.exists) console.log('Current data:', doc.data());
+  });
+
+# 21. Batch write - multiple operations
+const batch = db.batch();
+const ref1 = db.collection('items').doc('item1');
+const ref2 = db.collection('items').doc('item2');
+batch.set(ref1, { name: 'Item 1', price: 10 });
+batch.update(ref2, { price: 20 });
+batch.delete(db.collection('items').doc('item3'));
+await batch.commit();
+
+# 22. Transaction - atomic read and write
+await db.runTransaction(async (transaction) => {
+  const doc = await transaction.get(db.collection('items').doc('abc123'));
+  if (!doc.exists) throw new Error('Document does not exist');
+  
+  const newStock = doc.data().stock - 1;
+  transaction.update(db.collection('items').doc('abc123'), { stock: newStock });
+});
+
+# 23. Get document count
+const snapshot = await db.collection('items').get();
+console.log('Total documents:', snapshot.size);
+
+# 24. Get document with specific fields only
+const snapshot = await db.collection('items')
+  .select('name', 'price')
+  .get();
+
+# 25. Query not equal (requires composite index)
+const snapshot = await db.collection('items')
+  .where('category', '!=', 'Electronics')
+  .get();
+
+# 26. Increment field value
+await db.collection('items').doc('abc123').update({
+  stock: admin.firestore.FieldValue.increment(5)
+});
+
+# 27. Decrement field value
+await db.collection('items').doc('abc123').update({
+  stock: admin.firestore.FieldValue.increment(-1)
+});
+
+# 28. Add element to array field
+await db.collection('items').doc('abc123').update({
+  tags: admin.firestore.FieldValue.arrayUnion('new-tag')
+});
+
+# 29. Remove element from array field
+await db.collection('items').doc('abc123').update({
+  tags: admin.firestore.FieldValue.arrayRemove('old-tag')
+});
+
+# 30. Delete specific field from document
+await db.collection('items').doc('abc123').update({
+  description: admin.firestore.FieldValue.delete()
+});
+
+# 31. Set document with merge option
+await db.collection('items').doc('abc123').set({
+  price: 1199.99
+}, { merge: true });
+
+# 32. Get all documents in subcollection
+const snapshot = await db.collection('items').doc('abc123')
+  .collection('reviews')
+  .get();
+
+# 33. Collection group query
+const snapshot = await db.collectionGroup('reviews')
+  .where('rating', '>=', 4)
+  .get();
+
+# 34. Query with composite index (category + createdAt)
+const snapshot = await db.collection('items')
+  .where('category', '==', 'Electronics')
+  .orderBy('createdAt', 'desc')
+  .get();
+
+# 35. Get featured items only
+const snapshot = await db.collection('items')
+  .where('featured', '==', true)
+  .orderBy('createdAt', 'desc')
+  .get();
+
+# 36. Get items by user
+const snapshot = await db.collection('items')
+  .where('userId', '==', 'user123')
+  .get();
+
+# 37. Get low stock items
+const snapshot = await db.collection('items')
+  .where('stock', '<', 10)
+  .orderBy('stock', 'asc')
+  .get();
+
+# 38. Get items within price range with limit
+const snapshot = await db.collection('items')
+  .where('price', '>=', 50)
+  .where('price', '<=', 200)
+  .orderBy('price', 'asc')
+  .limit(20)
+  .get();
+
+# 39. Get most expensive items
+const snapshot = await db.collection('items')
+  .orderBy('price', 'desc')
+  .limit(5)
+  .get();
+
+# 40. Get recently added items
+const snapshot = await db.collection('items')
+  .orderBy('createdAt', 'desc')
+  .limit(10)
+  .get();
+
+## ========================================
+## Firestore Security Rules Examples
+## ========================================
+
+# 41. Allow read to all, write only to authenticated users
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /items/{itemId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+
+# 42. Allow only document owner to update/delete
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /items/{itemId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth.uid == resource.data.userId;
+    }
+  }
+}
+
+# 43. Validate required fields on create
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /items/{itemId} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'price', 'category'])
+                    && request.resource.data.name is string
+                    && request.resource.data.price is number
+                    && request.resource.data.price >= 0;
+    }
+  }
+}
+
+# 44. Admin-only access with custom claims
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /admin/{document=**} {
+      allow read, write: if request.auth != null 
+                         && request.auth.token.admin == true;
+    }
+  }
+}
+
+# 45. Time-based access rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /items/{itemId} {
+      allow read: if true;
+      allow create: if request.time < timestamp.date(2025, 12, 31);
+    }
+  }
+}
+
+## ========================================
+## Firebase CLI Commands
+## ========================================
+
+# 46. Login to Firebase
+firebase login
+
+# 47. List all projects
+firebase projects:list
+
+# 48. Initialize Firebase in current directory
+firebase init
+
+# 49. Deploy Firestore rules
+firebase deploy --only firestore:rules
+
+# 50. Deploy Firestore indexes
+firebase deploy --only firestore:indexes
+
+# 51. Export Firestore data
+gcloud firestore export gs://bucket-name/backup-folder
+
+# 52. Import Firestore data
+gcloud firestore import gs://bucket-name/backup-folder
+
+# 53. Delete all documents in collection (via script)
+firebase firestore:delete items --recursive --yes
+
+# 54. Start Firebase emulators
+firebase emulators:start
+
+# 55. Create new Firebase project (via console, then use CLI)
+firebase use project-id
+
