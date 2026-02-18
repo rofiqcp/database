@@ -1,5 +1,22 @@
 <template>
   <div>
+    <!-- Breadcrumb navigation -->
+    <nav class="flex items-center gap-1 text-sm mb-4 flex-wrap">
+      <span class="text-gray-400">
+        <svg class="w-4 h-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+      </span>
+      <template v-for="(crumb, idx) in store.breadcrumb" :key="crumb.id">
+        <span v-if="idx > 0" class="text-gray-300">/</span>
+        <button
+          @click="store.navigateToBreadcrumb(idx)"
+          :class="['hover:text-blue-600 transition-colors', idx === store.breadcrumb.length - 1 ? 'text-gray-800 font-semibold cursor-default' : 'text-blue-500']"
+          :disabled="idx === store.breadcrumb.length - 1"
+        >{{ crumb.name }}</button>
+      </template>
+    </nav>
+
     <!-- Toolbar -->
     <div class="flex flex-wrap items-center gap-3 mb-5">
       <input
@@ -57,18 +74,25 @@
           <tr
             v-for="file in store.files"
             :key="file.id"
-            class="hover:bg-gray-50 transition-colors group"
+            :class="['hover:bg-gray-50 transition-colors group', isFolder(file) ? 'cursor-pointer' : '']"
+            @click="isFolder(file) ? store.navigateToFolder(file) : null"
           >
             <td class="py-3 pr-4">
               <div class="flex items-center gap-2">
                 <span class="text-lg">{{ fileIcon(file.mimeType) }}</span>
-                <a
-                  v-if="file.webViewLink"
-                  :href="file.webViewLink"
-                  target="_blank"
-                  class="text-blue-600 hover:underline font-medium truncate max-w-xs"
-                >{{ file.name }}</a>
-                <span v-else class="font-medium truncate max-w-xs">{{ file.name }}</span>
+                <template v-if="isFolder(file)">
+                  <span class="font-medium text-gray-800 hover:text-blue-600 truncate max-w-xs">{{ file.name }}</span>
+                </template>
+                <template v-else>
+                  <a
+                    v-if="file.webViewLink"
+                    :href="file.webViewLink"
+                    target="_blank"
+                    class="text-blue-600 hover:underline font-medium truncate max-w-xs"
+                    @click.stop
+                  >{{ file.name }}</a>
+                  <span v-else class="font-medium truncate max-w-xs">{{ file.name }}</span>
+                </template>
               </div>
             </td>
             <td class="py-3 pr-4 text-gray-500 hidden md:table-cell truncate max-w-[12rem]">
@@ -80,10 +104,10 @@
             <td class="py-3 pr-4 text-gray-500 hidden md:table-cell whitespace-nowrap">
               {{ formatSize(file.size) }}
             </td>
-            <td class="py-3 text-right">
+            <td class="py-3 text-right" @click.stop>
               <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <a
-                  v-if="file.webContentLink"
+                  v-if="file.webContentLink && !isFolder(file)"
                   :href="file.webContentLink"
                   target="_blank"
                   title="Download"
@@ -136,10 +160,17 @@ const searchQuery = ref('')
 const deletingFile = ref(null)
 const deleting = ref(false)
 
-onMounted(loadFiles)
+onMounted(async () => {
+  await store.loadRootFolder()
+  await loadFiles()
+})
 
 async function loadFiles() {
   await store.fetchFiles(searchQuery.value)
+}
+
+function isFolder(file) {
+  return file.mimeType === 'application/vnd.google-apps.folder'
 }
 
 function confirmDelete(file) {

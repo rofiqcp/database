@@ -20,8 +20,12 @@
 
     <!-- Optional folder ID -->
     <div class="mb-5">
-      <label class="block text-xs text-gray-500 mb-1">Upload to Folder ID (optional)</label>
-      <input v-model="folderId" class="input-field max-w-sm" placeholder="Leave empty for Drive root" />
+      <p class="text-xs text-gray-500">
+        📁 Uploading to:
+        <span class="font-medium text-gray-700">
+          {{ currentFolderName }}
+        </span>
+      </p>
     </div>
 
     <!-- Pending files list -->
@@ -87,16 +91,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useDriveStore } from '../stores/driveStore.js'
 
 const store = useDriveStore()
 const fileInput = ref(null)
-const folderId = ref('')
 const pendingFiles = ref([])
 const dragging = ref(false)
 const uploading = ref(false)
 const error = ref(null)
+
+const currentFolderName = computed(() => {
+  if (!store.breadcrumb.length) return 'Database Root'
+  return store.breadcrumb[store.breadcrumb.length - 1]?.name || 'Database Root'
+})
 
 function triggerFileInput() {
   fileInput.value?.click()
@@ -129,7 +137,9 @@ async function uploadAll() {
     try {
       const formData = new FormData()
       formData.append('file', pf.file)
-      if (folderId.value) formData.append('folderId', folderId.value)
+      // Always upload to the currently browsed folder (backend defaults to rootFolderId)
+      const targetFolder = store.currentFolderId || store.rootFolderId
+      if (targetFolder) formData.append('folderId', targetFolder)
 
       const { data } = await import('../api.js').then(m => m.default.post('/drive/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

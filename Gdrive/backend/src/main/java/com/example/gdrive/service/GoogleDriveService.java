@@ -1,5 +1,6 @@
 package com.example.gdrive.service;
 
+import com.example.gdrive.config.GoogleConfig;
 import com.example.gdrive.model.DriveFile;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -28,10 +29,17 @@ public class GoogleDriveService {
     private static final GsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
     private final GoogleAuthService authService;
+    private final GoogleConfig googleConfig;
 
     @Autowired
-    public GoogleDriveService(GoogleAuthService authService) {
+    public GoogleDriveService(GoogleAuthService authService, GoogleConfig googleConfig) {
         this.authService = authService;
+        this.googleConfig = googleConfig;
+    }
+
+    /** Returns the configured root folder ID used as the database. */
+    public String getRootFolderId() {
+        return googleConfig.getRootFolderId();
     }
 
     private Drive getDriveService() throws IOException, GeneralSecurityException {
@@ -48,22 +56,32 @@ public class GoogleDriveService {
     }
 
     /**
-     * Lists files in the user's Google Drive (non-trashed, up to pageSize results).
+     * Lists files inside a specific folder (defaults to the configured root folder).
+     * Filters to direct children only: '&lt;folderId&gt;' in parents
      */
-    public List<DriveFile> listFiles(int pageSize, String pageToken, String query) throws IOException, GeneralSecurityException {
+    public List<DriveFile> listFiles(int pageSize, String pageToken, String query, String folderId)
+            throws IOException, GeneralSecurityException {
         Drive service = getDriveService();
+
+        // Resolve target folder: explicit param → root folder → no restriction
+        String targetFolder = (folderId != null && !folderId.isBlank())
+                ? folderId
+                : googleConfig.getRootFolderId();
+
+        // Build query
+        StringBuilder q = new StringBuilder("trashed = false");
+        if (targetFolder != null && !targetFolder.isBlank()) {
+            q.append(" and '").append(targetFolder).append("' in parents");
+        }
+        if (query != null && !query.isBlank()) {
+            q.append(" and name contains '").append(query.replace("'", "\\'")).append("'");
+        }
 
         Drive.Files.List request = service.files().list()
                 .setPageSize(pageSize)
                 .setFields("nextPageToken, files(id,name,mimeType,size,createdTime,modifiedTime,webViewLink,webContentLink,parents,trashed)")
-                .setOrderBy("modifiedTime desc");
-
-        // Build query: always exclude trashed files, optionally filter by name
-        String baseQuery = "trashed = false";
-        if (query != null && !query.isBlank()) {
-            baseQuery += " and name contains '" + query.replace("'", "\\'") + "'";
-        }
-        request.setQ(baseQuery);
+                .setOrderBy("folder, modifiedTime desc")
+                .setQ(q.toString());
 
         if (pageToken != null && !pageToken.isBlank()) {
             request.setPageToken(pageToken);
@@ -100,15 +118,20 @@ public class GoogleDriveService {
     }
 
     /**
-     * Uploads a multipart file to the root of Google Drive.
+     * Uploads a file. Defaults parent to the configured root folder if no folderId supplied.
      */
     public DriveFile uploadFile(MultipartFile multipartFile, String folderId) throws IOException, GeneralSecurityException {
         Drive service = getDriveService();
 
+        // Resolve upload destination: explicit param → root folder
+        String targetFolder = (folderId != null && !folderId.isBlank())
+                ? folderId
+                : googleConfig.getRootFolderId();
+
         File fileMetadata = new File();
         fileMetadata.setName(multipartFile.getOriginalFilename());
-        if (folderId != null && !folderId.isBlank()) {
-            fileMetadata.setParents(Collections.singletonList(folderId));
+        if (targetFolder != null && !targetFolder.isBlank()) {
+            fileMetadata.setParents(Collections.singletonList(targetFolder));
         }
 
         InputStreamContent mediaContent = new InputStreamContent(

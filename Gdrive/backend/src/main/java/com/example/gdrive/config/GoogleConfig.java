@@ -21,6 +21,9 @@ public class GoogleConfig {
     @Value("${google.redirect-uri:http://localhost:8080/api/auth/callback}")
     private String redirectUri;
 
+    @Value("${google.drive.root-folder-id:}")
+    private String rootFolderId;
+
     public static final List<String> SCOPES = Arrays.asList(
             "https://www.googleapis.com/auth/drive",
             "https://www.googleapis.com/auth/spreadsheets",
@@ -39,13 +42,17 @@ public class GoogleConfig {
         return redirectUri;
     }
 
+    public String getRootFolderId() {
+        return rootFolderId;
+    }
+
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173", "http://localhost:3000")
+                        .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)

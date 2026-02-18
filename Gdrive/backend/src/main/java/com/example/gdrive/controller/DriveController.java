@@ -28,17 +28,37 @@ public class DriveController {
     }
 
     /**
+     * GET /api/drive/root
+     * Returns the configured root folder ID used as the database.
+     */
+    @GetMapping("/root")
+    public ResponseEntity<?> getRootFolder() {
+        String rootId = driveService.getRootFolderId();
+        if (rootId == null || rootId.isBlank()) {
+            return ResponseEntity.ok(Map.of("rootFolderId", (Object) null, "message", "No root folder configured"));
+        }
+        try {
+            DriveFile folder = driveService.getFile(rootId);
+            return ResponseEntity.ok(Map.of("rootFolderId", rootId, "folder", folder));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("rootFolderId", rootId));
+        }
+    }
+
+    /**
      * GET /api/drive/files
-     * Lists files from Google Drive with optional pagination and search.
+     * Lists files from a specific folder (defaults to the root database folder).
      */
     @GetMapping("/files")
     public ResponseEntity<?> listFiles(
-            @RequestParam(defaultValue = "30") int pageSize,
+            @RequestParam(defaultValue = "100") int pageSize,
             @RequestParam(required = false) String pageToken,
-            @RequestParam(required = false) String query) {
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String folderId) {
         try {
-            List<DriveFile> files = driveService.listFiles(pageSize, pageToken, query);
-            return ResponseEntity.ok(Map.of("files", files, "count", files.size()));
+            List<DriveFile> files = driveService.listFiles(pageSize, pageToken, query, folderId);
+            return ResponseEntity.ok(Map.of("files", files, "count", files.size(),
+                    "folderId", folderId != null ? folderId : driveService.getRootFolderId()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
