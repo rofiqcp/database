@@ -1,0 +1,120 @@
+{
+  "auth_status": {
+    "endpoint": "GET /api/auth/status",
+    "response": {
+      "authenticated": true,
+      "message": "Authenticated with Google"
+    }
+  },
+  "list_files": {
+    "endpoint": "GET /api/drive/files",
+    "response": {
+      "files": [
+        {
+          "id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms",
+          "name": "Q2 Financial Report",
+          "mimeType": "application/vnd.google-apps.document",
+          "size": "0",
+          "createdTime": "2024-01-15T10:30:00.000Z",
+          "modifiedTime": "2024-06-01T14:22:00.000Z",
+          "webViewLink": "https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit",
+          "webContentLink": null,
+          "parents": "root",
+          "trashed": false
+        },
+        {
+          "id": "1a2b3c4d5e6f7g8h9i0j",
+          "name": "Sales Data 2024.xlsx",
+          "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "size": "45312",
+          "createdTime": "2024-03-20T08:00:00.000Z",
+          "modifiedTime": "2024-05-28T16:45:00.000Z",
+          "webViewLink": "https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view",
+          "webContentLink": "https://drive.google.com/uc?id=1a2b3c4d5e6f7g8h9i0j&export=download",
+          "parents": "folder123",
+          "trashed": false
+        },
+        {
+          "id": "photo_id_xyz",
+          "name": "team-photo.jpg",
+          "mimeType": "image/jpeg",
+          "size": "2097152",
+          "createdTime": "2024-04-01T12:00:00.000Z",
+          "modifiedTime": "2024-04-01T12:00:00.000Z",
+          "webViewLink": "https://drive.google.com/file/d/photo_id_xyz/view",
+          "webContentLink": "https://drive.google.com/uc?id=photo_id_xyz&export=download",
+          "parents": "root",
+          "trashed": false
+        }
+      ],
+      "count": 3
+    }
+  },
+  "spreadsheet_metadata": {
+    "endpoint": "GET /api/sheets/{spreadsheetId}",
+    "response": {
+      "spreadsheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms",
+      "title": "Sales Tracker 2024",
+      "sheets": [
+        { "sheetId": 0, "title": "Sheet1", "index": 0 },
+        { "sheetId": 1542601234, "title": "Q2 Data", "index": 1 },
+        { "sheetId": 987654321, "title": "Summary", "index": 2 }
+      ]
+    }
+  },
+  "sheet_values": {
+    "endpoint": "GET /api/sheets/{spreadsheetId}/values?range=Sheet1!A1:D5",
+    "response": {
+      "range": "Sheet1!A1:D5",
+      "values": [
+        ["Name", "Region", "Revenue", "Target"],
+        ["Alice", "North", "125000", "120000"],
+        ["Bob", "South", "98000", "110000"],
+        ["Charlie", "East", "142000", "130000"],
+        ["Diana", "West", "87000", "90000"]
+      ],
+      "rowCount": 5
+    }
+  },
+  "write_values": {
+    "endpoint": "PUT /api/sheets/{spreadsheetId}/values",
+    "response": {
+      "updatedRange": "Sheet1!A1:D3",
+      "updatedRows": 3,
+      "updatedColumns": 4,
+      "updatedCells": 12
+    }
+  },
+  "document_content": {
+    "endpoint": "GET /api/docs/{documentId}",
+    "response": {
+      "documentId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms",
+      "title": "Project Proposal: GDrive Integration",
+      "plainText": "Project Proposal: GDrive Integration\n\nOverview\nThis document outlines the plan for integrating Google Drive into our platform.\n\nObjectives\n1. Allow users to browse and manage their Drive files\n2. Enable reading and writing to Google Sheets\n3. Provide programmatic access to Google Docs\n\nTimeline\nWeek 1-2: Backend setup and OAuth2 flow\nWeek 3-4: Frontend development\nWeek 5: Testing and documentation\n",
+      "revisionId": "ABCDEfghij1234567890"
+    }
+  },
+  "create_document": {
+    "endpoint": "POST /api/docs/create",
+    "response": {
+      "documentId": "newDocId123456789",
+      "title": "Meeting Notes — June 2024",
+      "message": "Document created successfully"
+    }
+  },
+  "upload_file": {
+    "endpoint": "POST /api/drive/upload",
+    "response": {
+      "id": "uploadedFileId789",
+      "name": "quarterly-report.pdf",
+      "mimeType": "application/pdf",
+      "size": "1048576",
+      "createdTime": "2024-06-15T09:30:00.000Z",
+      "modifiedTime": "2024-06-15T09:30:00.000Z",
+      "webViewLink": "https://drive.google.com/file/d/uploadedFileId789/view",
+      "webContentLink": "https://drive.google.com/uc?id=uploadedFileId789&export=download",
+      "parents": "root",
+      "trashed": false
+    }
+  }
+}
