@@ -1,0 +1,25 @@
+# Build output
+backend/target/
+
+# Node modules
+frontend/node_modules/
+frontend/dist/
+
+# Environment files
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Google credentials & tokens (NEVER commit these)
+backend/credentials/credentials.json
+backend/credentials/tokens.json
+backend/credentials/StoredCredential
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

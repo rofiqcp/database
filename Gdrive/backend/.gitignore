@@ -1,0 +1,19 @@
+# Build output
+target/
+
+# Environment files
+.env
+
+# Google credentials & tokens (NEVER commit these)
+credentials/credentials.json
+credentials/tokens.json
+credentials/StoredCredential
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
