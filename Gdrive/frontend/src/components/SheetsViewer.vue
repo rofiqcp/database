@@ -196,10 +196,11 @@ async function submitWrite() {
 
 function columnLabel(index) {
   let label = ''
-  let n = index
-  while (n >= 0) {
+  let n = index + 1
+  while (n > 0) {
+    n--
     label = String.fromCharCode(65 + (n % 26)) + label
-    n = Math.floor(n / 26) - 1
+    n = Math.floor(n / 26)
   }
   return label
 }
